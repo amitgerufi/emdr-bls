@@ -2,8 +2,18 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>EMDR BLS — דשבורד מטפל</title>
+
+  <!-- ════ PWA — התקנה כאפליקציה עם אייקון ════ -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0c12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EMDR BLS">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
   <style>
     :root {
       --bg:        #0a0c12;
@@ -636,6 +646,11 @@ buildColors();
 updateSessionUI();
 watchStatus();
 push();
+
+// רישום ה-Service Worker (מאפשר התקנה כאפליקציה)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
