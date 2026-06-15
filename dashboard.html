@@ -541,18 +541,29 @@ function syncControlsFromState() {
 const pv = document.getElementById('preview');
 const pvx = pv.getContext('2d');
 let pvPhase = 0, pvLast = performance.now();
+
+// מתאים את רזולוציית הציור לגודל האמיתי על המסך (מונע מתיחה לאליפסה)
+function fitPreview() {
+  const rect = pv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.round(rect.width * dpr), h = Math.round(rect.height * dpr);
+  if (w && h && (pv.width !== w || pv.height !== h)) { pv.width = w; pv.height = h; }
+}
+
 function drawPreview(now) {
   const dt = (now - pvLast) / 1000; pvLast = now;
+  fitPreview();
   const W = pv.width, H = pv.height;
   pvx.clearRect(0, 0, W, H);
   if (S.running) pvPhase += dt * (0.2 + (S.speed - 1) * 0.15) * Math.PI;
 
+  const s = H / 120;                         // גורם קנה-מידה יחסי לגובה
   const swing = (0.30 + (S.swing - 1) * 0.175);
-  const margin = 34;
+  const margin = 34 * s;
   const cx = W / 2 + Math.sin(pvPhase) * ((W / 2 - margin) * (swing / 1.7));
-  let cy = H / 2 - (S.height * 6);
+  let cy = H / 2 - (S.height * 6 * s);
   if (S.pattern === 'figure8') cy += Math.sin(pvPhase * 2) * (H / 4) * (swing / 1.7);
-  const r = 6 + (S.size - 1) * 2.2;
+  const r = (6 + (S.size - 1) * 2.2) * s;
 
   const glow = pvx.createRadialGradient(cx, cy, 0, cx, cy, r * 2.2);
   glow.addColorStop(0, S.color + '99'); glow.addColorStop(1, S.color + '00');
