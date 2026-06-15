@@ -193,11 +193,29 @@
     .play-btn:active { transform: scale(.98); }
     .play-btn.start { background: linear-gradient(135deg, #10a86a, #0b7a4d); }
     .play-btn.pause { background: linear-gradient(135deg, #c06a1e, #8a4a15); }
-    .reset-btn {
-      width: 60px; flex: none; background: var(--surface-2); border: 1px solid var(--line);
-      color: var(--muted); border-radius: 16px; font-size: 22px; cursor: pointer;
+    .endset-btn {
+      flex: none; padding: 18px 20px; font-size: 16px; font-weight: 700;
+      background: var(--surface-2); border: 1px solid var(--accent); color: var(--accent-2);
+      border-radius: 16px; cursor: pointer; font-family: inherit; white-space: nowrap;
     }
-    .reset-btn:active { transform: scale(.96); background: var(--accent-dim); }
+    .endset-btn:active { transform: scale(.97); background: var(--accent-dim); }
+    .endset-btn:disabled { opacity: .4; border-color: var(--line); color: var(--muted); cursor: default; }
+
+    /* שורת מצב + סשן חדש בתוך ה-hero */
+    .hero-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+    .state-chip {
+      font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 999px;
+      background: var(--surface-2); border: 1px solid var(--line);
+    }
+    .state-chip.s-ready  { color: var(--muted); }
+    .state-chip.s-active { color: var(--green);  border-color: #15452f; background: var(--green-bg); }
+    .state-chip.s-pause  { color: var(--amber);  border-color: #463816; background: var(--amber-bg); }
+    .state-chip.s-between{ color: var(--accent-2); border-color: #1f3a63; background: var(--accent-dim); }
+    .ghost-btn {
+      background: none; border: none; color: var(--muted); font-size: 13px;
+      font-family: inherit; cursor: pointer; padding: 6px 8px; border-radius: 8px;
+    }
+    .ghost-btn:active { background: var(--surface-2); color: var(--text); }
   </style>
 </head>
 <body>
@@ -218,10 +236,14 @@
       <canvas id="preview" width="520" height="120"></canvas>
       <div class="preview-tag">תצוגה חיה — מה שהמטופל רואה</div>
     </div>
+    <div class="hero-bar">
+      <span id="m-state" class="state-chip s-ready">מוכן</span>
+      <button class="ghost-btn" onclick="newSession()">↺ סשן חדש</button>
+    </div>
     <div class="stats">
-      <div class="stat"><div class="l">מצב</div><div id="m-state" class="v s-ready">מוכן</div></div>
-      <div class="stat"><div class="l">חזרות</div><div id="m-reps" class="v">0</div></div>
-      <div class="stat"><div class="l">זמן סט (מאז פליי)</div><div id="m-set" class="v">00:00</div></div>
+      <div class="stat"><div class="l">סטים</div><div id="m-sets" class="v">0</div></div>
+      <div class="stat"><div class="l">חזרות (בסט)</div><div id="m-reps" class="v">0</div></div>
+      <div class="stat"><div class="l">זמן סט</div><div id="m-set" class="v">00:00</div></div>
       <div class="stat"><div class="l">זמן כולל</div><div id="m-total" class="v">00:00</div></div>
     </div>
   </div>
@@ -384,7 +406,7 @@
 <!-- ════ סרגל פעולה תחתון ════ -->
 <div class="actionbar">
   <button id="btn-play" class="play-btn start" onclick="togglePlay()">▶ התחל</button>
-  <button class="reset-btn" title="איפוס" onclick="resetAll()">↺</button>
+  <button id="btn-endset" class="endset-btn" onclick="endSet()">✓ סיים סט</button>
 </div>
 
 <script>
@@ -417,10 +439,10 @@ function push(immediate = true) {
 }
 
 // ══════════════════════════════════════════
-//  בקרת סשן
+//  בקרת סשן — שלוש רמות: השהה/המשך · סיים סט · סשן חדש
 // ══════════════════════════════════════════
-// שני טיימרים: setSecs = הסט הנוכחי (מתאפס בכל פליי) · totalSecs = כולל (מתאפס רק באיפוס)
-let setSecs = 0, totalSecs = 0, timerInt = null;
+// setSecs = זמן הסט הנוכחי · totalSecs = זמן כולל · sets = כמה סטים הושלמו
+let setSecs = 0, totalSecs = 0, sets = 0, timerInt = null;
 
 function startTimer() {
   if (!timerInt) timerInt = setInterval(() => { setSecs++; totalSecs++; renderTimers(); }, 1000);
@@ -434,26 +456,38 @@ function renderTimers() {
   document.getElementById('m-total').textContent = fmt(totalSecs);
 }
 
+// ── השהה / המשך (רגעי — שום דבר לא מתאפס) ──
 function togglePlay() {
   S.running = !S.running;
-  if (S.running) {
-    setSecs = 0; renderTimers(); startTimer();        // פליי → מאפס טיימר סט
-    S.setSeq++;                                        // ...וגם את מונה החזרות
-    document.getElementById('m-reps').textContent = '0';
-  } else {
-    stopTimer();
-  }
+  if (S.running) startTimer();
+  else           stopTimer();
   updateSessionUI();
   push();
 }
 
-function resetAll() {
-  const seq = S.sessionSeq + 1;
-  S = { ...DEFAULTS, sessionSeq: seq };
-  setSecs = 0; totalSecs = 0;
+// ── סיים סט (מאפס חזרות + זמן-סט, מונה הסטים +1, הסשן ממשיך) ──
+function endSet() {
+  if (setSecs === 0 && S.running === false) return; // אין סט פעיל לסיים
+  sets++;
+  document.getElementById('m-sets').textContent = sets;
+  setSecs = 0;
+  S.setSeq++;                                        // מאפס פאזה+חזרות במשקפת
+  S.running = false;
   stopTimer();
-  syncControlsFromState();
   renderTimers();
+  document.getElementById('m-reps').textContent = '0';
+  updateSessionUI();
+  push();
+}
+
+// ── סשן חדש (מאפס הכול; משאיר את ההגדרות) ──
+function newSession() {
+  sets = 0; setSecs = 0; totalSecs = 0;
+  S.running = false;
+  S.sessionSeq++;                                    // מאפס פאזה+חזרות במשקפת
+  stopTimer();
+  renderTimers();
+  document.getElementById('m-sets').textContent = '0';
   document.getElementById('m-reps').textContent = '0';
   updateSessionUI();
   push();
@@ -462,14 +496,18 @@ function resetAll() {
 function updateSessionUI() {
   const st  = document.getElementById('m-state');
   const btn = document.getElementById('btn-play');
+  const end = document.getElementById('btn-endset');
   if (S.running) {
     btn.textContent = '⏸ השהה'; btn.className = 'play-btn pause';
-    st.textContent = 'פעיל'; st.className = 'v s-active';
+    st.textContent = 'פעיל'; st.className = 'state-chip s-active';
   } else {
     btn.textContent = '▶ התחל'; btn.className = 'play-btn start';
-    if (totalSecs > 0) { st.textContent = 'מושהה'; st.className = 'v s-pause'; }
-    else               { st.textContent = 'מוכן';  st.className = 'v s-ready'; }
+    if (setSecs > 0)      { st.textContent = 'מושהה';   st.className = 'state-chip s-pause'; }
+    else if (sets > 0)    { st.textContent = 'בין סטים'; st.className = 'state-chip s-between'; }
+    else                  { st.textContent = 'מוכן';     st.className = 'state-chip s-ready'; }
   }
+  // "סיים סט" זמין רק כשיש סט פעיל (רץ או מושהה באמצע)
+  end.disabled = !(S.running || setSecs > 0);
 }
 
 // ══════════════════════════════════════════
