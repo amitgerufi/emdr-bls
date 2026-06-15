@@ -267,7 +267,16 @@
       <button class="tog on" id="tog-audio"  onclick="tog('audio')"><span class="ico">♪</span>אודיו</button>
       <button class="tog on" id="tog-haptic" onclick="tog('haptic')"><span class="ico">📳</span>רטט</button>
     </div>
-    <button class="wide-tog" id="tog-hapticOnly" onclick="tog('hapticOnly')">📴 רטט בלבד — ללא קסדה</button>
+    <div class="sl-row" style="margin-top:16px; margin-bottom:0">
+      <span class="sl-label">עוצמת רטט</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('hapticStrength',-1)">−</button>
+        <div class="sl-track"><input type="range" id="sl-hapticStrength" min="1" max="9" value="5" oninput="sl('hapticStrength',this.value)"></div>
+        <button class="step-btn" onclick="step('hapticStrength',1)">+</button>
+      </div>
+      <span class="sl-val" id="val-hapticStrength">5</span>
+    </div>
+    <button class="wide-tog" id="tog-hapticOnly" onclick="tog('hapticOnly')" style="margin-top:16px">📴 רטט בלבד — ללא קסדה</button>
     <div class="help" id="hapticHelp" style="display:none">
       במצב זה המטופל מוריד את הקסדה וחווה רק רטט בידיים. כדי שהמכשיר לא יירדם —
       יש לכבות את חיישן הקירבה דרך SideQuest / Meta Quest Developer Hub.
@@ -309,7 +318,7 @@ const DB = 'https://emdr-bls-b9cd1-default-rtdb.firebaseio.com';
 const DEFAULTS = {
   running: false, speed: 5, swing: 5, height: 0, size: 5,
   color: '#5599ff', pattern: 'horizontal',
-  visual: true, audio: true, haptic: true,
+  visual: true, audio: true, haptic: true, hapticStrength: 5,
   env: 'sky', music: 'off', musicVolume: 5, hapticOnly: false,
   sessionSeq: 0,
 };
@@ -451,7 +460,7 @@ function setColor(hex) {
 //  סנכרון פקדים מהמצב (אחרי איפוס)
 // ══════════════════════════════════════════
 function syncControlsFromState() {
-  ['speed','swing','height','size','musicVolume'].forEach(k => {
+  ['speed','swing','height','size','musicVolume','hapticStrength'].forEach(k => {
     const inp = document.getElementById(`sl-${k}`);
     if (inp) { inp.value = S[k]; showVal(k, S[k]); }
   });

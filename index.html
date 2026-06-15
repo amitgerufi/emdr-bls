@@ -49,6 +49,7 @@
       visual:     true,
       audio:      true,
       haptic:     true,
+      hapticStrength: 5,        // 1–9 עוצמת הרטט
       env:        'sky',        // סביבת רקע
       music:      'off',        // 'off' | '1' | '2' | '3'
       musicVolume: 5,           // 0–9
@@ -206,7 +207,8 @@
       if (!session) return;
       for (const src of session.inputSources) {
         if (src.handedness === side && src.gamepad?.hapticActuators?.length > 0) {
-          src.gamepad.hapticActuators[0].pulse(1.0, 150);
+          const strength = Math.max(0.1, Math.min(1, S.hapticStrength / 9));
+          src.gamepad.hapticActuators[0].pulse(strength, 150);
         }
       }
     }
