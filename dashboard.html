@@ -37,14 +37,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
-      background:
-        radial-gradient(900px 500px at 100% -10%, #161d2e 0%, transparent 60%),
-        var(--bg);
-      color: var(--text); min-height: 100vh; direction: rtl;
-      padding-bottom: 104px; /* מקום לסרגל הפעולה התחתון */
+      background: radial-gradient(900px 500px at 100% -10%, #161d2e 0%, transparent 60%), var(--bg);
+      color: var(--text); min-height: 100vh; direction: rtl; padding-bottom: 104px;
     }
 
-    /* ════ כותרת עליונה (sticky) ════ */
+    /* ════ כותרת (sticky) ════ */
     header {
       background: rgba(12,15,22,.85); backdrop-filter: blur(10px);
       padding: 13px 18px; display: flex; align-items: center; justify-content: space-between;
@@ -53,8 +50,7 @@
     .brand { display: flex; align-items: center; gap: 10px; }
     .brand .logo {
       width: 30px; height: 30px; border-radius: 9px; flex: none;
-      background: linear-gradient(135deg, var(--accent), #2dd4bf);
-      display: grid; place-items: center; font-size: 15px;
+      background: linear-gradient(135deg, var(--accent), #2dd4bf); display: grid; place-items: center; font-size: 15px;
     }
     .brand .t { font-size: 15px; font-weight: 700; line-height: 1.1; }
     .brand .t small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 500; }
@@ -68,50 +64,58 @@
     .conn.off { background: var(--red-bg); color: var(--red); border-color: #45201f; }
     .conn.off .dot { background: var(--red); }
 
-    main { padding: 16px; display: flex; flex-direction: column; gap: 20px; max-width: 560px; margin: 0 auto; }
+    main { padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; margin: 0 auto; }
 
-    /* ════ אזור עליון — מרכז הבקרה (hero) ════ */
+    /* ════ מרכז בקרה (hero) ════ */
     .hero {
       background: linear-gradient(180deg, #18203200, #131722), var(--surface);
-      border: 1px solid var(--line); border-radius: 22px; padding: 16px;
-      box-shadow: var(--shadow);
+      border: 1px solid var(--line); border-radius: 22px; padding: 16px; box-shadow: var(--shadow);
     }
-    .preview-frame {
-      position: relative; border-radius: 16px; overflow: hidden;
-      border: 1px solid var(--line); background: #0a1622;
-    }
+    .preview-frame { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #0a1622; }
     #preview { width: 100%; height: 120px; display: block; }
     .preview-tag {
-      position: absolute; top: 8px; inset-inline-start: 10px;
-      font-size: 10.5px; color: var(--muted); background: rgba(0,0,0,.45);
-      padding: 3px 9px; border-radius: 999px; backdrop-filter: blur(4px);
+      position: absolute; top: 8px; inset-inline-start: 10px; font-size: 10.5px; color: #dfe6f5;
+      background: rgba(0,0,0,.4); padding: 3px 9px; border-radius: 999px; backdrop-filter: blur(4px);
     }
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
-    .stat {
-      background: var(--surface-2); border: 1px solid var(--line);
-      border-radius: 14px; padding: 11px 8px; text-align: center;
-    }
-    .stat .l { font-size: 10.5px; color: var(--muted); margin-bottom: 4px; }
-    .stat .v { font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
-    .stat .v.s-ready  { color: var(--muted); }
-    .stat .v.s-active { color: var(--green); }
-    .stat .v.s-pause  { color: var(--amber); }
 
-    /* ════ סקשן כללי ════ */
-    .section { display: flex; flex-direction: column; gap: 6px; }
-    .sec-head {
-      display: flex; align-items: center; gap: 9px; padding: 0 4px 2px;
+    .hero-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+    .state-chip { font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+    .state-chip.s-ready  { color: var(--muted); }
+    .state-chip.s-active { color: var(--green);  border-color: #15452f; background: var(--green-bg); }
+    .state-chip.s-pause  { color: var(--amber);  border-color: #463816; background: var(--amber-bg); }
+    .state-chip.s-between{ color: var(--accent-2); border-color: #1f3a63; background: var(--accent-dim); }
+    .ghost-btn { background: none; border: none; color: var(--muted); font-size: 13px; font-family: inherit; cursor: pointer; padding: 6px 8px; border-radius: 8px; }
+    .ghost-btn:active { background: var(--surface-2); color: var(--text); }
+
+    /* רצועת מדדים קומפקטית */
+    .minstats { display: flex; gap: 8px; margin-top: 12px; }
+    .mini { flex: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 5px; text-align: center; }
+    .mini .l { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+    .mini .v { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    /* בקרת מהירות בולטת */
+    .speed-hero { margin-top: 14px; background: var(--surface-2); border: 1px solid var(--accent-dim); border-radius: 16px; padding: 14px 16px; }
+    .speed-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+    .speed-top .lbl { font-size: 15px; font-weight: 700; color: #dfe4ee; }
+    .speed-num { font-size: 32px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; line-height: 1; }
+    .speed-ctl { display: flex; align-items: center; gap: 14px; }
+
+    /* ════ אקורדיון ════ */
+    .acc { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+    .acc-head {
+      width: 100%; display: flex; align-items: center; gap: 11px; padding: 16px;
+      background: none; border: none; color: var(--text); font-family: inherit; cursor: pointer; text-align: start;
     }
-    .sec-head .ico {
-      width: 26px; height: 26px; border-radius: 8px; flex: none; display: grid; place-items: center;
-      background: var(--accent-dim); font-size: 14px;
-    }
-    .sec-head .tx { font-size: 13px; font-weight: 700; }
-    .sec-head .tx small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 500; margin-top: 1px; }
-    .panel {
-      background: var(--surface); border: 1px solid var(--line);
-      border-radius: 18px; padding: 16px; box-shadow: var(--shadow);
-    }
+    .acc-head:active { background: var(--surface-2); }
+    .acc-chev { display: inline-block; color: var(--muted); font-size: 13px; width: 14px; transition: transform .2s; transform: rotate(90deg); }
+    .acc.open .acc-chev { transform: rotate(0deg); }
+    .acc-ico { font-size: 16px; }
+    .acc-title { font-size: 14px; font-weight: 700; }
+    .acc-sum { margin-inline-start: auto; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 48%; }
+    .acc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+    .acc.open .acc-body { grid-template-rows: 1fr; }
+    .acc-inner { overflow: hidden; }
+    .acc-pad { padding: 4px 16px 18px; }
 
     /* ════ שורת סליידר ════ */
     .field { display: flex; align-items: center; gap: 12px; }
@@ -119,16 +123,16 @@
     .f-label { width: 72px; font-size: 13.5px; color: #cfd4e0; flex-shrink: 0; }
     .stepper { display: flex; align-items: center; gap: 10px; flex: 1; }
     .step-btn {
-      width: 36px; height: 36px; flex: none; border-radius: 11px;
-      background: var(--surface-2); border: 1px solid var(--line);
-      color: var(--text); font-size: 21px; line-height: 1; cursor: pointer;
+      width: 40px; height: 40px; flex: none; border-radius: 11px; background: var(--surface-3);
+      border: 1px solid var(--line); color: var(--text); font-size: 22px; line-height: 1; cursor: pointer;
     }
     .step-btn:active { background: var(--accent-dim); transform: scale(.94); }
+    .step-btn.big { width: 50px; height: 50px; font-size: 26px; border-radius: 14px; }
     .track { flex: 1; }
     input[type=range] { width: 100%; height: 6px; border-radius: 3px; accent-color: var(--accent); cursor: pointer; }
     .f-val { width: 34px; text-align: center; font-size: 17px; font-weight: 800; color: #fff; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-    /* ════ בוררי בחירה (segmented) ════ */
+    /* ════ בוררים (segmented) ════ */
     .seg { display: flex; gap: 8px; flex-wrap: wrap; }
     .seg button {
       flex: 1; min-width: 62px; padding: 12px 8px; font-size: 13px; font-weight: 600;
@@ -139,26 +143,18 @@
     .seg button:active { transform: scale(.96); }
     .seg-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
 
-    /* ════ ערוץ (כותרת עם מתג + גוף) ════ */
+    /* ════ ערוץ ════ */
     .channel + .channel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
     .ch-head { display: flex; align-items: center; justify-content: space-between; }
     .ch-name { display: flex; align-items: center; gap: 10px; font-size: 14.5px; font-weight: 600; }
     .ch-name .ci { font-size: 18px; }
     .ch-body { margin-top: 14px; transition: opacity .2s; }
     .channel.off .ch-body { opacity: .32; pointer-events: none; filter: grayscale(.5); }
-
-    /* מתג iOS-style */
     .switch { position: relative; width: 50px; height: 30px; flex: none; cursor: pointer; }
-    .switch .trk {
-      position: absolute; inset: 0; border-radius: 999px;
-      background: var(--surface-3); border: 1px solid var(--line); transition: background .2s, border-color .2s;
-    }
-    .switch .knob {
-      position: absolute; top: 3px; inset-inline-end: 3px; width: 24px; height: 24px;
-      border-radius: 50%; background: #cbd3e6; transition: transform .2s, background .2s;
-    }
+    .switch .trk { position: absolute; inset: 0; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line); transition: background .2s, border-color .2s; }
+    .switch .knob { position: absolute; top: 3px; inset-inline-end: 3px; width: 24px; height: 24px; border-radius: 50%; background: #cbd3e6; transition: transform .2s, background .2s; }
     .switch.on .trk { background: var(--accent); border-color: var(--accent); }
-    .switch.on .knob { background: #fff; transform: translateX(20px); } /* RTL: זז שמאלה */
+    .switch.on .knob { background: #fff; transform: translateX(20px); }
 
     /* ════ צבעים ════ */
     .colors { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -169,53 +165,33 @@
 
     /* ════ מצב מיוחד ════ */
     .wide-tog {
-      width: 100%; padding: 15px; font-size: 14px; font-weight: 600;
-      border: 2px solid var(--line); border-radius: 14px; background: var(--surface-2);
-      color: var(--muted); cursor: pointer; font-family: inherit; text-align: center;
-      transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 15px; font-size: 14px; font-weight: 600; border: 2px solid var(--line);
+      border-radius: 14px; background: var(--surface-2); color: var(--muted); cursor: pointer;
+      font-family: inherit; text-align: center; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .wide-tog.on { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
     .help { font-size: 11.5px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
 
     /* ════ סרגל פעולה תחתון (sticky) ════ */
     .actionbar {
-      position: fixed; bottom: 0; inset-inline: 0; z-index: 30;
-      background: rgba(12,15,22,.9); backdrop-filter: blur(12px);
-      border-top: 1px solid var(--line); padding: 12px 16px;
+      position: fixed; bottom: 0; inset-inline: 0; z-index: 30; background: rgba(12,15,22,.9);
+      backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding: 12px 16px;
       display: flex; gap: 10px; max-width: 560px; margin: 0 auto;
     }
     .play-btn {
-      flex: 1; padding: 18px; font-size: 19px; font-weight: 800;
-      border: none; border-radius: 16px; cursor: pointer; font-family: inherit;
-      display: flex; align-items: center; justify-content: center; gap: 9px;
+      flex: 1; padding: 18px; font-size: 19px; font-weight: 800; border: none; border-radius: 16px;
+      cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 9px;
       transition: transform .08s, filter .15s; color: #fff;
     }
     .play-btn:active { transform: scale(.98); }
     .play-btn.start { background: linear-gradient(135deg, #10a86a, #0b7a4d); }
     .play-btn.pause { background: linear-gradient(135deg, #c06a1e, #8a4a15); }
     .endset-btn {
-      flex: none; padding: 18px 20px; font-size: 16px; font-weight: 700;
-      background: var(--surface-2); border: 1px solid var(--accent); color: var(--accent-2);
-      border-radius: 16px; cursor: pointer; font-family: inherit; white-space: nowrap;
+      flex: none; padding: 18px 18px; font-size: 15px; font-weight: 700; background: var(--surface-2);
+      border: 1px solid var(--accent); color: var(--accent-2); border-radius: 16px; cursor: pointer; font-family: inherit; white-space: nowrap;
     }
     .endset-btn:active { transform: scale(.97); background: var(--accent-dim); }
     .endset-btn:disabled { opacity: .4; border-color: var(--line); color: var(--muted); cursor: default; }
-
-    /* שורת מצב + סשן חדש בתוך ה-hero */
-    .hero-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
-    .state-chip {
-      font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 999px;
-      background: var(--surface-2); border: 1px solid var(--line);
-    }
-    .state-chip.s-ready  { color: var(--muted); }
-    .state-chip.s-active { color: var(--green);  border-color: #15452f; background: var(--green-bg); }
-    .state-chip.s-pause  { color: var(--amber);  border-color: #463816; background: var(--amber-bg); }
-    .state-chip.s-between{ color: var(--accent-2); border-color: #1f3a63; background: var(--accent-dim); }
-    .ghost-btn {
-      background: none; border: none; color: var(--muted); font-size: 13px;
-      font-family: inherit; cursor: pointer; padding: 6px 8px; border-radius: 8px;
-    }
-    .ghost-btn:active { background: var(--surface-2); color: var(--text); }
   </style>
 </head>
 <body>
@@ -236,34 +212,37 @@
       <canvas id="preview" width="520" height="120"></canvas>
       <div class="preview-tag">תצוגה חיה — מה שהמטופל רואה</div>
     </div>
+
     <div class="hero-bar">
       <span id="m-state" class="state-chip s-ready">מוכן</span>
       <button class="ghost-btn" onclick="newSession()">↺ סשן חדש</button>
     </div>
-    <div class="stats">
-      <div class="stat"><div class="l">סטים</div><div id="m-sets" class="v">0</div></div>
-      <div class="stat"><div class="l">חזרות (בסט)</div><div id="m-reps" class="v">0</div></div>
-      <div class="stat"><div class="l">זמן סט</div><div id="m-set" class="v">00:00</div></div>
-      <div class="stat"><div class="l">זמן כולל</div><div id="m-total" class="v">00:00</div></div>
+
+    <div class="minstats">
+      <div class="mini"><div class="l">סטים</div><div id="m-sets" class="v">0</div></div>
+      <div class="mini"><div class="l">חזרות</div><div id="m-reps" class="v">0</div></div>
+      <div class="mini"><div class="l">זמן סט</div><div id="m-set" class="v">00:00</div></div>
+      <div class="mini"><div class="l">זמן כולל</div><div id="m-total" class="v">00:00</div></div>
+    </div>
+
+    <!-- מהירות — הבקרה הראשית בזמן אמת -->
+    <div class="speed-hero">
+      <div class="speed-top"><span class="lbl">מהירות</span><span id="val-speed" class="speed-num">5</span></div>
+      <div class="speed-ctl">
+        <button class="step-btn big" onclick="step('speed',-1)">−</button>
+        <div class="track"><input type="range" id="sl-speed" min="1" max="9" value="5" oninput="sl('speed',this.value)"></div>
+        <button class="step-btn big" onclick="step('speed',1)">+</button>
+      </div>
     </div>
   </div>
 
   <!-- ════ תנועה ════ -->
-  <div class="section">
-    <div class="sec-head">
-      <div class="ico">🎯</div>
-      <div class="tx">תנועה<small>הקצב שמניע את כל הערוצים</small></div>
-    </div>
-    <div class="panel">
-      <div class="field">
-        <span class="f-label">מהירות</span>
-        <div class="stepper">
-          <button class="step-btn" onclick="step('speed',-1)">−</button>
-          <div class="track"><input type="range" id="sl-speed" min="1" max="9" value="5" oninput="sl('speed',this.value)"></div>
-          <button class="step-btn" onclick="step('speed',1)">+</button>
-        </div>
-        <span class="f-val" id="val-speed">5</span>
-      </div>
+  <div class="acc" id="acc-motion">
+    <button class="acc-head" onclick="toggleAcc('acc-motion')">
+      <span class="acc-chev">▾</span><span class="acc-ico">🎯</span>
+      <span class="acc-title">תנועה</span><span class="acc-sum" id="sum-motion"></span>
+    </button>
+    <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
       <div class="field">
         <span class="f-label">רוחב</span>
         <div class="stepper">
@@ -289,18 +268,17 @@
           <button id="pat-figure8" onclick="setPattern('figure8')">∞ שמינייה</button>
         </div>
       </div>
-    </div>
+    </div></div></div>
   </div>
 
   <!-- ════ ערוצי גירוי ════ -->
-  <div class="section">
-    <div class="sec-head">
-      <div class="ico">🎚️</div>
-      <div class="tx">ערוצי גירוי<small>הפעלה וכוונון לכל ערוץ</small></div>
-    </div>
-    <div class="panel">
+  <div class="acc" id="acc-channels">
+    <button class="acc-head" onclick="toggleAcc('acc-channels')">
+      <span class="acc-chev">▾</span><span class="acc-ico">🎚️</span>
+      <span class="acc-title">ערוצי גירוי</span><span class="acc-sum" id="sum-channels"></span>
+    </button>
+    <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
 
-      <!-- ויזואל -->
       <div class="channel" id="ch-visual">
         <div class="ch-head">
           <div class="ch-name"><span class="ci">👁</span> ויזואל — הכדור</div>
@@ -320,7 +298,6 @@
         </div>
       </div>
 
-      <!-- אודיו -->
       <div class="channel" id="ch-audio">
         <div class="ch-head">
           <div class="ch-name"><span class="ci">♪</span> אודיו — צליל מתחלף</div>
@@ -328,7 +305,6 @@
         </div>
       </div>
 
-      <!-- רטט -->
       <div class="channel" id="ch-haptic">
         <div class="ch-head">
           <div class="ch-name"><span class="ci">📳</span> רטט — בשלטים</div>
@@ -347,16 +323,16 @@
         </div>
       </div>
 
-    </div>
+    </div></div></div>
   </div>
 
-  <!-- ════ סביבה ואווירה ════ -->
-  <div class="section">
-    <div class="sec-head">
-      <div class="ico">🌅</div>
-      <div class="tx">סביבה ואווירה<small>רקע ומוזיקה</small></div>
-    </div>
-    <div class="panel">
+  <!-- ════ סביבה ומוזיקה ════ -->
+  <div class="acc" id="acc-ambiance">
+    <button class="acc-head" onclick="toggleAcc('acc-ambiance')">
+      <span class="acc-chev">▾</span><span class="acc-ico">🌅</span>
+      <span class="acc-title">סביבה ומוזיקה</span><span class="acc-sum" id="sum-ambiance"></span>
+    </button>
+    <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
       <div class="seg-label">רקע</div>
       <div class="seg" id="envSeg">
         <button data-env="room"    onclick="setEnv('room')">חדר רגוע</button>
@@ -365,7 +341,6 @@
         <button data-env="sky"     class="sel" onclick="setEnv('sky')">שמיים</button>
         <button data-env="neutral" onclick="setEnv('neutral')">ניטרלי</button>
       </div>
-
       <div class="seg-label" style="margin-top:18px">מוזיקת רקע</div>
       <div class="seg" id="musicSeg">
         <button data-music="off" class="sel" onclick="setMusic('off')">ללא</button>
@@ -383,22 +358,22 @@
         <span class="f-val" id="val-musicVolume">5</span>
       </div>
       <div class="help">להוספת מוזיקה: שים קבצי MP3 בשם 1.mp3 / 2.mp3 / 3.mp3 בתיקיית music.</div>
-    </div>
+    </div></div></div>
   </div>
 
   <!-- ════ מצב מיוחד ════ -->
-  <div class="section">
-    <div class="sec-head">
-      <div class="ico">📴</div>
-      <div class="tx">מצב מיוחד<small>רטט ללא קסדה</small></div>
-    </div>
-    <div class="panel">
+  <div class="acc" id="acc-special">
+    <button class="acc-head" onclick="toggleAcc('acc-special')">
+      <span class="acc-chev">▾</span><span class="acc-ico">📴</span>
+      <span class="acc-title">מצב מיוחד</span><span class="acc-sum" id="sum-special"></span>
+    </button>
+    <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
       <button class="wide-tog" id="sw-hapticOnly" onclick="tog('hapticOnly')">📴 רטט בלבד — ללא קסדה</button>
       <div class="help" id="hapticHelp" style="display:none">
         המטופל מוריד את הקסדה וחווה רק רטט בידיים. כדי שהמכשיר לא יירדם —
         יש לכבות את חיישן הקירבה דרך SideQuest / Meta Quest Developer Hub.
       </div>
-    </div>
+    </div></div></div>
   </div>
 
 </main>
@@ -423,8 +398,8 @@ const DEFAULTS = {
   color: '#5599ff', pattern: 'horizontal',
   visual: true, audio: true, haptic: true, hapticStrength: 5,
   env: 'sky', music: 'off', musicVolume: 5, hapticOnly: false,
-  sessionSeq: 0,  // איפוס מלא (כפתור איפוס)
-  setSeq: 0,      // תחילת סט חדש (כל פליי) → מאפס חזרות במשקפת
+  sessionSeq: 0,  // איפוס מלא (סשן חדש)
+  setSeq: 0,      // תחילת סט חדש (סיים סט) → מאפס חזרות במשקפת
 };
 let S = { ...DEFAULTS };
 
@@ -439,18 +414,36 @@ function push(immediate = true) {
 }
 
 // ══════════════════════════════════════════
+//  אקורדיון
+// ══════════════════════════════════════════
+function toggleAcc(id) { document.getElementById(id).classList.toggle('open'); }
+
+// סיכומים קצרים בכותרות הסקשנים
+const ENV_NAMES = { room: 'חדר רגוע', nature: 'נוף טבע', beach: 'חוף ים', sky: 'שמיים', neutral: 'ניטרלי' };
+function updateSummaries() {
+  const h = S.height > 0 ? `+${S.height}` : S.height;
+  document.getElementById('sum-motion').textContent =
+    `רוחב ${S.swing} · גובה ${h} · ${S.pattern === 'figure8' ? '∞' : '⟷'}`;
+  const act = [];
+  if (S.visual) act.push('ויזואל');
+  if (S.audio)  act.push('אודיו');
+  if (S.haptic) act.push('רטט');
+  document.getElementById('sum-channels').textContent = act.length ? act.join(' · ') : 'הכל כבוי';
+  document.getElementById('sum-ambiance').textContent =
+    ENV_NAMES[S.env] + (S.music !== 'off' ? ` · מוזיקה ${S.music}` : '');
+  document.getElementById('sum-special').textContent = S.hapticOnly ? 'פעיל' : '';
+}
+
+// ══════════════════════════════════════════
 //  בקרת סשן — שלוש רמות: השהה/המשך · סיים סט · סשן חדש
 // ══════════════════════════════════════════
-// setSecs = זמן הסט הנוכחי · totalSecs = זמן כולל · sets = כמה סטים הושלמו
 let setSecs = 0, totalSecs = 0, sets = 0, timerInt = null;
 
 function startTimer() {
   if (!timerInt) timerInt = setInterval(() => { setSecs++; totalSecs++; renderTimers(); }, 1000);
 }
 function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null; } }
-function fmt(s) {
-  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-}
+function fmt(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
 function renderTimers() {
   document.getElementById('m-set').textContent   = fmt(setSecs);
   document.getElementById('m-total').textContent = fmt(totalSecs);
@@ -467,11 +460,11 @@ function togglePlay() {
 
 // ── סיים סט (מאפס חזרות + זמן-סט, מונה הסטים +1, הסשן ממשיך) ──
 function endSet() {
-  if (setSecs === 0 && S.running === false) return; // אין סט פעיל לסיים
+  if (setSecs === 0 && S.running === false) return;
   sets++;
   document.getElementById('m-sets').textContent = sets;
   setSecs = 0;
-  S.setSeq++;                                        // מאפס פאזה+חזרות במשקפת
+  S.setSeq++;
   S.running = false;
   stopTimer();
   renderTimers();
@@ -484,7 +477,7 @@ function endSet() {
 function newSession() {
   sets = 0; setSecs = 0; totalSecs = 0;
   S.running = false;
-  S.sessionSeq++;                                    // מאפס פאזה+חזרות במשקפת
+  S.sessionSeq++;
   stopTimer();
   renderTimers();
   document.getElementById('m-sets').textContent = '0';
@@ -506,19 +499,18 @@ function updateSessionUI() {
     else if (sets > 0)    { st.textContent = 'בין סטים'; st.className = 'state-chip s-between'; }
     else                  { st.textContent = 'מוכן';     st.className = 'state-chip s-ready'; }
   }
-  // "סיים סט" זמין רק כשיש סט פעיל (רץ או מושהה באמצע)
   end.disabled = !(S.running || setSecs > 0);
 }
 
 // ══════════════════════════════════════════
 //  סליידרים + כפתורי ±
 // ══════════════════════════════════════════
-function sl(key, value) { S[key] = Number(value); showVal(key, S[key]); push(false); }
+function sl(key, value) { S[key] = Number(value); showVal(key, S[key]); updateSummaries(); push(false); }
 function step(key, dir) {
   const input = document.getElementById(`sl-${key}`);
   const min = Number(input.min), max = Number(input.max);
   const val = Math.max(min, Math.min(max, Number(S[key]) + dir));
-  S[key] = val; input.value = val; showVal(key, val); push();
+  S[key] = val; input.value = val; showVal(key, val); updateSummaries(); push();
 }
 function showVal(key, val) {
   const el = document.getElementById(`val-${key}`);
@@ -533,24 +525,23 @@ function setPattern(p) {
   S.pattern = p;
   document.getElementById('pat-horizontal').classList.toggle('sel', p === 'horizontal');
   document.getElementById('pat-figure8').classList.toggle('sel', p === 'figure8');
-  push();
+  updateSummaries(); push();
 }
 function setEnv(e) {
   S.env = e;
   document.querySelectorAll('#envSeg button').forEach(b => b.classList.toggle('sel', b.dataset.env === e));
-  push();
+  updateSummaries(); push();
 }
 function setMusic(m) {
   S.music = m;
   document.querySelectorAll('#musicSeg button').forEach(b => b.classList.toggle('sel', b.dataset.music === m));
-  push();
+  updateSummaries(); push();
 }
 function tog(key) {
   S[key] = !S[key];
   updateToggleUI(key);
-  push();
+  updateSummaries(); push();
 }
-// מעדכן מתג + עמעום גוף הערוץ / עזרה
 function updateToggleUI(key) {
   const sw = document.getElementById(`sw-${key}`);
   if (sw) sw.classList.toggle('on', S[key]);
@@ -585,22 +576,8 @@ function setColor(hex) {
 }
 
 // ══════════════════════════════════════════
-//  סנכרון פקדים מהמצב (אחרי איפוס)
-// ══════════════════════════════════════════
-function syncControlsFromState() {
-  ['speed','swing','height','size','musicVolume','hapticStrength'].forEach(k => {
-    const inp = document.getElementById(`sl-${k}`);
-    if (inp) { inp.value = S[k]; showVal(k, S[k]); }
-  });
-  setPattern(S.pattern); setEnv(S.env); setMusic(S.music);
-  ['visual','audio','haptic','hapticOnly'].forEach(updateToggleUI);
-  buildColors();
-}
-
-// ══════════════════════════════════════════
 //  תצוגה מקדימה חיה
 // ══════════════════════════════════════════
-// צבעי הסביבות — זהים למשקפת (index.html)
 const ENV_COLORS = {
   room:    { top: '#d9c9b0', bottom: '#8a7355' },
   nature:  { top: '#9fd4e8', bottom: '#5a8f4e' },
@@ -608,41 +585,32 @@ const ENV_COLORS = {
   sky:     { top: '#3a7bd5', bottom: '#bfe3ff' },
   neutral: { top: '#5a5a66', bottom: '#23232b' },
 };
-
 const pv = document.getElementById('preview');
 const pvx = pv.getContext('2d');
 let pvPhase = 0, pvLast = performance.now();
-
-// מתאים את רזולוציית הציור לגודל האמיתי על המסך (מונע מתיחה לאליפסה)
 function fitPreview() {
   const rect = pv.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   const w = Math.round(rect.width * dpr), h = Math.round(rect.height * dpr);
   if (w && h && (pv.width !== w || pv.height !== h)) { pv.width = w; pv.height = h; }
 }
-
 function drawPreview(now) {
   const dt = (now - pvLast) / 1000; pvLast = now;
   fitPreview();
   const W = pv.width, H = pv.height;
   pvx.clearRect(0, 0, W, H);
-
-  // רקע הסביבה הנבחרת (מעבר-גוון אנכי)
   const env = ENV_COLORS[S.env] || ENV_COLORS.sky;
   const bg = pvx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, env.top); bg.addColorStop(1, env.bottom);
   pvx.fillStyle = bg; pvx.fillRect(0, 0, W, H);
-
   if (S.running) pvPhase += dt * (0.2 + (S.speed - 1) * 0.15) * Math.PI;
-
-  const s = H / 120;                         // גורם קנה-מידה יחסי לגובה
+  const s = H / 120;
   const swing = (0.30 + (S.swing - 1) * 0.175);
   const margin = 34 * s;
   const cx = W / 2 + Math.sin(pvPhase) * ((W / 2 - margin) * (swing / 1.7));
   let cy = H / 2 - (S.height * 6 * s);
   if (S.pattern === 'figure8') cy += Math.sin(pvPhase * 2) * (H / 4) * (swing / 1.7);
   const r = (6 + (S.size - 1) * 2.2) * s;
-
   const glow = pvx.createRadialGradient(cx, cy, 0, cx, cy, r * 2.2);
   glow.addColorStop(0, S.color + '99'); glow.addColorStop(1, S.color + '00');
   pvx.fillStyle = glow;
@@ -681,6 +649,7 @@ setInterval(checkConn, 1000);
 // ══════════════════════════════════════════
 buildColors();
 ['visual','audio','haptic','hapticOnly'].forEach(updateToggleUI);
+updateSummaries();
 updateSessionUI();
 watchStatus();
 push();
