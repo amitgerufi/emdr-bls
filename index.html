@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMDR BLS</title>
+  <style>
+    body { margin: 0; background: #000; overflow: hidden; }
+    #info {
+      position: absolute; top: 14px; width: 100%;
+      text-align: center; color: #fff;
+      font-family: Arial, sans-serif; font-size: 13px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">EMDR BLS | לחץ "Enter VR"</div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three":         "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+    // ══════════════════════════════════════════
+    //  Firebase — כתובת בסיס הנתונים
+    // ══════════════════════════════════════════
+    const DB = 'https://emdr-bls-b9cd1-default-rtdb.firebaseio.com';
+
+    // ══════════════════════════════════════════
+    //  מצב מרכזי — מתעדכן מהדשבורד דרך Firebase
+    // ══════════════════════════════════════════
+    const S = {
+      running:    true,
+      speed:      5,            // 1–9
+      swing:      5,            // 1–9 רוחב תנועה
+      height:     0,            // -5 עד +5
+      size:       5,            // 1–9
+      color:      '#5599ff',
+      pattern:    'horizontal', // 'horizontal' | 'figure8'
+      visual:     true,
+      audio:      true,
+      haptic:     true,
+      env:        'sky',        // סביבת רקע
+      music:      'off',        // 'off' | '1' | '2' | '3'
+      musicVolume: 5,           // 0–9
+      hapticOnly: false,
+      sessionSeq: 0,            // משתנה באיפוס → מאפס פאזה/חזרות
+    };
+
+    // המרת סקאלות לערכים פיזיקליים
+    const toSpeed  = l => 0.2  + (l - 1) * 0.150;
+    const toSwing  = l => 0.30 + (l - 1) * 0.175;
+    const toHeight = h => h * 0.10;
+    const toScale  = l => 0.40 + (l - 1) * 0.150;
+
+    // ══════════════════════════════════════════
+    //  Three.js
+    // ══════════════════════════════════════════
+    const scene    = new THREE.Scene();
+    const camera   = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(devicePixelRatio);
+    renderer.xr.enabled = true;
+    renderer.xr.setReferenceSpaceType('local'); // 0 = גובה עיניים
+    document.body.appendChild(renderer.domElement);
+    document.body.appendChild(VRButton.createButton(renderer));
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+    sun.position.set(2, 4, 3);
+    scene.add(sun);
+
+    // ══════════════════════════════════════════
+    //  סביבת רקע — ספֵרה הפוכה ענקית עם מעבר-גוון
+    //  (מחולל בקוד, ללא קבצים כבדים)
+    // ══════════════════════════════════════════
+    const ENVIRONMENTS = {
+      room:    { top: '#d9c9b0', bottom: '#8a7355', clear: 0xb9a685 }, // חדר רגוע
+      nature:  { top: '#9fd4e8', bottom: '#5a8f4e', clear: 0x86b97a }, // נוף טבע
+      beach:   { top: '#aee4f0', bottom: '#e8d6a8', clear: 0xbfe0e6 }, // חוף ים
+      sky:     { top: '#3a7bd5', bottom: '#bfe3ff', clear: 0x87CEEB }, // שמיים
+      neutral: { top: '#5a5a66', bottom: '#23232b', clear: 0x33333b }, // ניטרלי
+    };
+
+    // יוצר טקסטורת מעבר-גוון אנכי על canvas
+    function makeGradientTexture(top, bottom) {
+      const c = document.createElement('canvas');
+      c.width = 16; c.height = 256;
+      const g = c.getContext('2d');
+      const grad = g.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, top);
+      grad.addColorStop(1, bottom);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 16, 256);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // ספֵרה הפוכה שעוטפת את המטופל (BackSide = רואים אותה מבפנים)
+    const skyMat  = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
+    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), skyMat);
+    scene.add(skyDome);
+
+    function applyEnv(name) {
+      const e = ENVIRONMENTS[name] || ENVIRONMENTS.sky;
+      if (skyMat.map) skyMat.map.dispose();
+      skyMat.map = makeGradientTexture(e.top, e.bottom);
+      skyMat.needsUpdate = true;
+      renderer.setClearColor(e.clear);
+    }
+    applyEnv(S.env);
+
+    // ══════════════════════════════════════════
+    //  כדור — ערכי יעד + מעבר חלק (lerp)
+    // ══════════════════════════════════════════
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 32, 32),
+      new THREE.MeshStandardMaterial({ color: S.color, roughness: 0.4, metalness: 0.1 })
+    );
+    sphere.position.set(0, toHeight(S.height), -1.5);
+    sphere.scale.setScalar(toScale(S.size));
+    scene.add(sphere);
+
+    // ערכי יעד שאליהם הכדור "זוחל" בעדינות
+    const target = {
+      scale:  toScale(S.size),
+      posY:   toHeight(S.height),
+      color:  new THREE.Color(S.color),
+    };
+
+    // ══════════════════════════════════════════
+    //  אודיו — "טק" קצר בכל קצה
+    // ══════════════════════════════════════════
+    let audioCtx = null;
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    function playTick(side) {
+      if (!audioCtx || !S.running || !S.audio) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const panner = new StereoPannerNode(audioCtx, { pan: side === 'right' ? 1 : -1 });
+      osc.type = 'sine';
+      osc.frequency.value = 440;
+      const t = audioCtx.currentTime;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.45, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc.connect(panner); panner.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + 0.13);
+    }
+
+    // ══════════════════════════════════════════
+    //  מוזיקת רקע — קובץ מתיקיית music/
+    // ══════════════════════════════════════════
+    let musicEl = null;     // ה-<audio> הנוכחי
+    let musicId = 'off';    // איזו רצועה נטענה
+
+    function applyMusic() {
+      // עצירה אם כובה או שונתה הבחירה
+      if (S.music === 'off' || S.music !== musicId) {
+        if (musicEl) { musicEl.pause(); musicEl = null; }
+        musicId = 'off';
+      }
+      // ווליום (0–9 → 0.0–1.0)
+      const vol = Math.max(0, Math.min(1, S.musicVolume / 9));
+      // טעינה והפעלה של רצועה נבחרת
+      if (S.music !== 'off' && S.music !== musicId) {
+        musicEl = new Audio(`music/${S.music}.mp3`);
+        musicEl.loop = true;
+        musicEl.volume = vol;
+        musicEl.play().catch(() => {}); // קובץ חסר / חסימת autoplay → מתעלמים
+        musicId = S.music;
+      }
+      if (musicEl) musicEl.volume = vol;
+    }
+
+    // הפעלת אודיו דורשת תנועת משתמש
+    function resumeAudio() {
+      if (!audioCtx) initAudio();
+      else if (audioCtx.state === 'suspended') audioCtx.resume();
+      applyMusic();
+    }
+    document.addEventListener('click', resumeAudio);
+    renderer.xr.addEventListener('sessionstart', resumeAudio);
+
+    // ══════════════════════════════════════════
+    //  רטט מתחלף
+    // ══════════════════════════════════════════
+    function pulseHaptic(side) {
+      if (!S.haptic) return;
+      const session = renderer.xr.getSession();
+      if (!session) return;
+      for (const src of session.inputSources) {
+        if (src.handedness === side && src.gamepad?.hapticActuators?.length > 0) {
+          src.gamepad.hapticActuators[0].pulse(1.0, 150);
+        }
+      }
+    }
+
+    // ══════════════════════════════════════════
+    //  Firebase ← מאזין לפקודות מהדשבורד
+    // ══════════════════════════════════════════
+    let lastSessionSeq = S.sessionSeq;
+
+    function connectFirebase() {
+      const stream = new EventSource(`${DB}/emdr.json`);
+      stream.addEventListener('put', e => {
+        const { data } = JSON.parse(e.data);
+        if (!data) return;
+        Object.assign(S, data);
+        applyAll();
+      });
+      stream.addEventListener('error', () => { /* יתחבר מחדש אוטומטית */ });
+    }
+
+    // מחיל את כל הפרמטרים אחרי עדכון מהדשבורד
+    function applyAll() {
+      target.scale = toScale(S.size);
+      target.posY  = toHeight(S.height);
+      target.color.set(S.color);
+      sphere.visible = S.visual;
+      applyEnv(S.env);
+      applyMusic();
+      // איפוס סשן → מאפס פאזה וחזרות
+      if (S.sessionSeq !== lastSessionSeq) {
+        lastSessionSeq = S.sessionSeq;
+        phase = 0; reps = 0;
+      }
+    }
+
+    connectFirebase();
+
+    // ══════════════════════════════════════════
+    //  Firebase → דיווח סטטוס (נוכחות + חזרות)
+    // ══════════════════════════════════════════
+    function reportStatus() {
+      fetch(`${DB}/status.json`, {
+        method: 'PUT',
+        body: JSON.stringify({ alive: Date.now(), reps, running: S.running }),
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => {});
+    }
+    setInterval(reportStatus, 1000); // heartbeat כל שנייה
+
+    // ══════════════════════════════════════════
+    //  קונטרולרים (בקאפ ללא דשבורד)
+    // ══════════════════════════════════════════
+    [renderer.xr.getController(0), renderer.xr.getController(1)].forEach(ctrl => {
+      ctrl.addEventListener('selectstart', () => { S.running = !S.running; });
+      scene.add(ctrl);
+    });
+
+    // ══════════════════════════════════════════
+    //  לולאת אנימציה
+    // ══════════════════════════════════════════
+    const clock = new THREE.Clock();
+    let prevA = false, prevB = false;
+    let hapticR = false, hapticL = false;
+    let phase = 0;   // פאזת התנועה — צוברת לאורך זמן (פתרון הקפיצה)
+    let reps  = 0;   // מונה חזרות (מחזורים מלאים)
+
+    renderer.setAnimationLoop(() => {
+      const dt = clock.getDelta();
+
+      // כפתורי A/B — שינוי מהירות (בקאפ ללא דשבורד)
+      const session = renderer.xr.getSession();
+      if (session) {
+        for (const src of session.inputSources) {
+          const gp = src.gamepad; if (!gp) continue;
+          const aNow = gp.buttons[4]?.pressed ?? false;
+          const bNow = gp.buttons[5]?.pressed ?? false;
+          if (aNow && !prevA) S.speed = Math.min(9, S.speed + 1);
+          if (bNow && !prevB) S.speed = Math.max(1, S.speed - 1);
+          prevA = aNow; prevB = bNow;
+        }
+      }
+
+      // מעבר חלק של גודל/גובה/צבע אל ערכי היעד
+      const k = 1 - Math.pow(0.001, dt); // lerp עצמאי-קצב-פריימים
+      sphere.scale.setScalar(THREE.MathUtils.lerp(sphere.scale.x, target.scale, k));
+      sphere.position.y = THREE.MathUtils.lerp(sphere.position.y, target.posY, k);
+      sphere.material.color.lerp(target.color, k);
+
+      if (S.running) {
+        const swing = toSwing(S.swing);
+
+        // צבירת פאזה — שינוי מהירות משנה קצב, לא מיקום (אין קפיצה)
+        const prevPhase = phase;
+        phase += dt * toSpeed(S.speed) * Math.PI;
+
+        // ספירת חזרות — כל מחזור מלא (2π) = חזרה אחת
+        reps = Math.floor(phase / (Math.PI * 2));
+
+        // מיקום לפי תבנית התנועה
+        const x = Math.sin(phase) * swing;
+        sphere.position.x = x;
+        if (S.pattern === 'figure8') {
+          // שמינייה: תנודת Y בתדר כפול סביב הגובה הנוכחי
+          sphere.position.y = target.posY + Math.sin(phase * 2) * (swing * 0.4);
+        }
+
+        // טריגר אודיו + רטט בקצוות ה-X
+        const zone = swing * 0.80;
+        if (x > zone && !hapticR) {
+          hapticR = true; hapticL = false;
+          pulseHaptic('right'); playTick('right');
+        } else if (x < -zone && !hapticL) {
+          hapticL = true; hapticR = false;
+          pulseHaptic('left'); playTick('left');
+        }
+      }
+
+      renderer.render(scene, camera);
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+  </script>
+</body>
+</html>
