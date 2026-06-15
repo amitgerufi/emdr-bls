@@ -55,6 +55,7 @@
       musicVolume: 5,           // 0–9
       hapticOnly: false,
       sessionSeq: 0,            // משתנה באיפוס → מאפס פאזה/חזרות
+      setSeq:     0,            // משתנה בכל פליי → מאפס פאזה/חזרות (סט חדש)
     };
 
     // המרת סקאלות לערכים פיזיקליים
@@ -217,6 +218,7 @@
     //  Firebase ← מאזין לפקודות מהדשבורד
     // ══════════════════════════════════════════
     let lastSessionSeq = S.sessionSeq;
+    let lastSetSeq = S.setSeq;
 
     function connectFirebase() {
       const stream = new EventSource(`${DB}/emdr.json`);
@@ -237,9 +239,10 @@
       sphere.visible = S.visual;
       applyEnv(S.env);
       applyMusic();
-      // איפוס סשן → מאפס פאזה וחזרות
-      if (S.sessionSeq !== lastSessionSeq) {
+      // איפוס סשן (כפתור איפוס) או תחילת סט חדש (פליי) → מאפס פאזה וחזרות
+      if (S.sessionSeq !== lastSessionSeq || S.setSeq !== lastSetSeq) {
         lastSessionSeq = S.sessionSeq;
+        lastSetSeq = S.setSeq;
         phase = 0; reps = 0;
       }
     }

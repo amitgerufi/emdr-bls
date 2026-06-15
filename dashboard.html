@@ -391,7 +391,8 @@ const DEFAULTS = {
   color: '#5599ff', pattern: 'horizontal',
   visual: true, audio: true, haptic: true, hapticStrength: 5,
   env: 'sky', music: 'off', musicVolume: 5, hapticOnly: false,
-  sessionSeq: 0,
+  sessionSeq: 0,  // איפוס מלא (כפתור איפוס)
+  setSeq: 0,      // תחילת סט חדש (כל פליי) → מאפס חזרות במשקפת
 };
 let S = { ...DEFAULTS };
 
@@ -425,8 +426,13 @@ function renderTimers() {
 
 function togglePlay() {
   S.running = !S.running;
-  if (S.running) { setSecs = 0; renderTimers(); startTimer(); } // פליי → מאפס את טיימר הסט
-  else           { stopTimer(); }
+  if (S.running) {
+    setSecs = 0; renderTimers(); startTimer();        // פליי → מאפס טיימר סט
+    S.setSeq++;                                        // ...וגם את מונה החזרות
+    document.getElementById('m-reps').textContent = '0';
+  } else {
+    stopTimer();
+  }
   updateSessionUI();
   push();
 }
