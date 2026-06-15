@@ -76,13 +76,13 @@
       font-size: 10.5px; color: var(--muted); background: rgba(0,0,0,.45);
       padding: 3px 9px; border-radius: 999px; backdrop-filter: blur(4px);
     }
-    .stats { display: flex; gap: 10px; margin-top: 14px; }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
     .stat {
-      flex: 1; background: var(--surface-2); border: 1px solid var(--line);
+      background: var(--surface-2); border: 1px solid var(--line);
       border-radius: 14px; padding: 11px 8px; text-align: center;
     }
     .stat .l { font-size: 10.5px; color: var(--muted); margin-bottom: 4px; }
-    .stat .v { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .stat .v { font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
     .stat .v.s-ready  { color: var(--muted); }
     .stat .v.s-active { color: var(--green); }
     .stat .v.s-pause  { color: var(--amber); }
@@ -210,8 +210,9 @@
     </div>
     <div class="stats">
       <div class="stat"><div class="l">מצב</div><div id="m-state" class="v s-ready">מוכן</div></div>
-      <div class="stat"><div class="l">זמן סשן</div><div id="m-time" class="v">00:00</div></div>
       <div class="stat"><div class="l">חזרות</div><div id="m-reps" class="v">0</div></div>
+      <div class="stat"><div class="l">זמן סט (מאז פליי)</div><div id="m-set" class="v">00:00</div></div>
+      <div class="stat"><div class="l">זמן כולל</div><div id="m-total" class="v">00:00</div></div>
     </div>
   </div>
 
@@ -407,29 +408,36 @@ function push(immediate = true) {
 // ══════════════════════════════════════════
 //  בקרת סשן
 // ══════════════════════════════════════════
-let sessionSecs = 0, timerInt = null;
+// שני טיימרים: setSecs = הסט הנוכחי (מתאפס בכל פליי) · totalSecs = כולל (מתאפס רק באיפוס)
+let setSecs = 0, totalSecs = 0, timerInt = null;
+
+function startTimer() {
+  if (!timerInt) timerInt = setInterval(() => { setSecs++; totalSecs++; renderTimers(); }, 1000);
+}
+function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null; } }
+function fmt(s) {
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function renderTimers() {
+  document.getElementById('m-set').textContent   = fmt(setSecs);
+  document.getElementById('m-total').textContent = fmt(totalSecs);
+}
 
 function togglePlay() {
   S.running = !S.running;
-  if (S.running && !timerInt) timerInt = setInterval(tickTimer, 1000);
-  if (!S.running && timerInt) { clearInterval(timerInt); timerInt = null; }
+  if (S.running) { setSecs = 0; renderTimers(); startTimer(); } // פליי → מאפס את טיימר הסט
+  else           { stopTimer(); }
   updateSessionUI();
   push();
-}
-function tickTimer() { sessionSecs++; renderTime(); }
-function renderTime() {
-  const m = String(Math.floor(sessionSecs / 60)).padStart(2, '0');
-  const s = String(sessionSecs % 60).padStart(2, '0');
-  document.getElementById('m-time').textContent = `${m}:${s}`;
 }
 
 function resetAll() {
   const seq = S.sessionSeq + 1;
   S = { ...DEFAULTS, sessionSeq: seq };
-  sessionSecs = 0;
-  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+  setSecs = 0; totalSecs = 0;
+  stopTimer();
   syncControlsFromState();
-  renderTime();
+  renderTimers();
   document.getElementById('m-reps').textContent = '0';
   updateSessionUI();
   push();
@@ -443,8 +451,8 @@ function updateSessionUI() {
     st.textContent = 'פעיל'; st.className = 'v s-active';
   } else {
     btn.textContent = '▶ התחל'; btn.className = 'play-btn start';
-    if (sessionSecs > 0) { st.textContent = 'מושהה'; st.className = 'v s-pause'; }
-    else                 { st.textContent = 'מוכן';  st.className = 'v s-ready'; }
+    if (totalSecs > 0) { st.textContent = 'מושהה'; st.className = 'v s-pause'; }
+    else               { st.textContent = 'מוכן';  st.className = 'v s-ready'; }
   }
 }
 
@@ -538,6 +546,15 @@ function syncControlsFromState() {
 // ══════════════════════════════════════════
 //  תצוגה מקדימה חיה
 // ══════════════════════════════════════════
+// צבעי הסביבות — זהים למשקפת (index.html)
+const ENV_COLORS = {
+  room:    { top: '#d9c9b0', bottom: '#8a7355' },
+  nature:  { top: '#9fd4e8', bottom: '#5a8f4e' },
+  beach:   { top: '#aee4f0', bottom: '#e8d6a8' },
+  sky:     { top: '#3a7bd5', bottom: '#bfe3ff' },
+  neutral: { top: '#5a5a66', bottom: '#23232b' },
+};
+
 const pv = document.getElementById('preview');
 const pvx = pv.getContext('2d');
 let pvPhase = 0, pvLast = performance.now();
@@ -555,6 +572,13 @@ function drawPreview(now) {
   fitPreview();
   const W = pv.width, H = pv.height;
   pvx.clearRect(0, 0, W, H);
+
+  // רקע הסביבה הנבחרת (מעבר-גוון אנכי)
+  const env = ENV_COLORS[S.env] || ENV_COLORS.sky;
+  const bg = pvx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, env.top); bg.addColorStop(1, env.bottom);
+  pvx.fillStyle = bg; pvx.fillRect(0, 0, W, H);
+
   if (S.running) pvPhase += dt * (0.2 + (S.speed - 1) * 0.15) * Math.PI;
 
   const s = H / 120;                         // גורם קנה-מידה יחסי לגובה
