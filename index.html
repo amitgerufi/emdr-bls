@@ -112,15 +112,41 @@
 
     // ספֵרה הפוכה שעוטפת את המטופל (BackSide = רואים אותה מבפנים)
     const skyMat  = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
-    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), skyMat);
+    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(30, 64, 32), skyMat);
     scene.add(skyDome);
 
-    function applyEnv(name) {
-      const e = ENVIRONMENTS[name] || ENVIRONMENTS.sky;
-      if (skyMat.map) skyMat.map.dispose();
+    // רקעי תמונה 360 — נטענים מתיקיית backgrounds/ (כל ערך env שאינו גוון)
+    const texLoader  = new THREE.TextureLoader();
+    const photoCache = {};       // id → THREE.Texture (נטען פעם אחת בלבד)
+    let   currentEnv = null;     // הרקע המוצג כעת — מונע טעינה חוזרת בכל עדכון
+
+    function setGradient(e) {
+      if (skyMat.map && skyMat.map.isCanvasTexture) skyMat.map.dispose();
       skyMat.map = makeGradientTexture(e.top, e.bottom);
       skyMat.needsUpdate = true;
       renderer.setClearColor(e.clear);
+    }
+
+    function applyEnv(name) {
+      if (name === currentEnv) return;     // אין שינוי אמיתי → לא טוענים שוב
+      currentEnv = name;
+      // גוון מחולל-בקוד
+      if (ENVIRONMENTS[name]) { setGradient(ENVIRONMENTS[name]); return; }
+      // רקע תמונה — מהמטמון אם כבר נטען
+      if (photoCache[name]) {
+        skyMat.map = photoCache[name]; skyMat.needsUpdate = true;
+        renderer.setClearColor(0x000000);
+        return;
+      }
+      // טעינה ראשונה (אסינכרונית)
+      texLoader.load(`backgrounds/${name}.jpg`, tex => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        photoCache[name] = tex;
+        if (currentEnv === name) {          // עדיין הרקע הנבחר?
+          skyMat.map = tex; skyMat.needsUpdate = true;
+          renderer.setClearColor(0x000000);
+        }
+      }, undefined, () => { setGradient(ENVIRONMENTS.neutral); currentEnv = null; });
     }
     applyEnv(S.env);
 

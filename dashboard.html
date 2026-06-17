@@ -142,6 +142,24 @@
     .seg button.sel { border-color: var(--accent); background: var(--accent-dim); color: #cfe0ff; }
     .seg button:active { transform: scale(.96); }
     .seg-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .seg button small { display: block; font-size: 9.5px; opacity: .6; font-weight: 500; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+    /* רשת רקעי-תמונה: כפתורים עם תמונה ממוזערת */
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .photo-grid button {
+      flex: none; min-width: 0; padding: 0; height: 60px; overflow: hidden; position: relative;
+      background-size: cover; background-position: center; color: #fff;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .photo-grid button span {
+      width: 100%; font-size: 11px; font-weight: 600; padding: 4px 3px 3px;
+      background: linear-gradient(0deg, rgba(0,0,0,.7), transparent); text-shadow: 0 1px 2px #000;
+    }
+    .photo-grid button.sel { border-color: var(--accent); border-width: 2px; }
+    .photo-grid button.sel::after {
+      content: '✓'; position: absolute; top: 3px; inset-inline-end: 5px; font-size: 13px;
+      color: #fff; text-shadow: 0 1px 3px #000;
+    }
 
     /* ════ ערוץ ════ */
     .channel + .channel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
@@ -333,7 +351,7 @@
       <span class="acc-title">סביבה ומוזיקה</span><span class="acc-sum" id="sum-ambiance"></span>
     </button>
     <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
-      <div class="seg-label">רקע</div>
+      <div class="seg-label">רקע — גוונים</div>
       <div class="seg" id="envSeg">
         <button data-env="room"    onclick="setEnv('room')">חדר רגוע</button>
         <button data-env="nature"  onclick="setEnv('nature')">נוף טבע</button>
@@ -341,13 +359,10 @@
         <button data-env="sky"     class="sel" onclick="setEnv('sky')">שמיים</button>
         <button data-env="neutral" onclick="setEnv('neutral')">ניטרלי</button>
       </div>
+      <div class="seg-label" style="margin-top:18px">רקעי תמונה 360°</div>
+      <div class="seg photo-grid" id="photoSeg"></div>
       <div class="seg-label" style="margin-top:18px">מוזיקת רקע</div>
-      <div class="seg" id="musicSeg">
-        <button data-music="off" class="sel" onclick="setMusic('off')">ללא</button>
-        <button data-music="1" onclick="setMusic('1')">מוזיקה 1</button>
-        <button data-music="2" onclick="setMusic('2')">מוזיקה 2</button>
-        <button data-music="3" onclick="setMusic('3')">מוזיקה 3</button>
-      </div>
+      <div class="seg" id="musicSeg"></div>
       <div class="field" style="margin-top:16px">
         <span class="f-label">ווליום</span>
         <div class="stepper">
@@ -357,7 +372,7 @@
         </div>
         <span class="f-val" id="val-musicVolume">5</span>
       </div>
-      <div class="help">להוספת מוזיקה: שים קבצי MP3 בשם 1.mp3 / 2.mp3 / 3.mp3 בתיקיית music.</div>
+      <div class="help">המוזיקה מתנגנת ברקע בלולאה. רצועות ארוכות מתחילות מיד (שידור תוך כדי נגינה).</div>
     </div></div></div>
   </div>
 
@@ -391,6 +406,76 @@
 const DB = 'https://emdr-bls-b9cd1-default-rtdb.firebaseio.com';
 
 // ══════════════════════════════════════════
+//  רקעי תמונה 360° (קבצים בתיקיית backgrounds/)
+// ══════════════════════════════════════════
+const PHOTOS = [
+  { id: 'green-valley',   label: 'עמק ירוק 360°' },
+  { id: 'white-beach',    label: 'חוף לבן' },
+  { id: 'open-sea',       label: 'ים פתוח' },
+  { id: 'shore',          label: 'שפת מים' },
+  { id: 'sunrise-hills',  label: 'זריחה על גבעות' },
+  { id: 'rocky-beach',    label: 'חוף סלעים' },
+  { id: 'green-hills',    label: 'גבעות ירוקות' },
+  { id: 'night-sky',      label: 'שמי לילה' },
+  { id: 'turquoise-waves',label: 'גלי טורקיז' },
+  { id: 'space',          label: 'חלל' },
+  { id: 'nebula',         label: 'ערפילית' },
+  { id: 'nebula-blue',    label: 'ערפילית כחולה' },
+  { id: 'nebula-purple',  label: 'ערפילית סגולה' },
+  { id: 'nebula-orange',  label: 'ערפילית כתומה' },
+  { id: 'watercolor',     label: 'אקוורל' },
+];
+const PHOTO_IDS = new Set(PHOTOS.map(p => p.id));
+const photoImgs = {};   // מטמון תמונות לתצוגה המקדימה
+function getPhotoImg(id) {
+  if (!photoImgs[id]) { const im = new Image(); im.src = `backgrounds/${id}.jpg`; photoImgs[id] = im; }
+  return photoImgs[id];
+}
+function buildPhotos() {
+  const seg = document.getElementById('photoSeg');
+  seg.innerHTML = '';
+  PHOTOS.forEach(p => {
+    const b = document.createElement('button');
+    b.dataset.env = p.id;
+    b.style.backgroundImage = `url(backgrounds/${p.id}.jpg)`;
+    if (p.id === S.env) b.classList.add('sel');
+    b.innerHTML = `<span>${p.label}</span>`;
+    b.onclick = () => setEnv(p.id);
+    seg.appendChild(b);
+  });
+}
+
+// ══════════════════════════════════════════
+//  מוזיקת רקע (קבצים בתיקיית music/)
+// ══════════════════════════════════════════
+const MUSIC = [
+  { id: 'mondamusic-meditation-491684',                        label: 'מדיטציה קצרה',  dur: '1:43' },
+  { id: 'ribhavagrawal-solo-handpan-music-no-copyright-345257',label: 'האנדפן',         dur: '2:26' },
+  { id: 'leberch-meditation-509071',                           label: 'מדיטציה רכה',   dur: '2:54' },
+  { id: 'alex-morgan-documentary-nature-528316',               label: 'טבע',            dur: '2:49' },
+  { id: 'the_mountain-spiritual-meditation-444137',            label: 'רוחני',          dur: '5:26' },
+  { id: 'leberch-meditation-510292',                           label: 'מדיטציה עמוקה', dur: '5:28' },
+  { id: 'freemusicforvideo-meditation-background-409198',      label: 'מדיטציה ארוכה', dur: '7:52' },
+  { id: 'siarhei_korbut-handpan-soundscape-432-hz-396231',     label: 'האנדפן 432Hz',  dur: '10:00' },
+];
+const MUSIC_NAMES = {};
+MUSIC.forEach(m => MUSIC_NAMES[m.id] = m.label);
+function buildMusic() {
+  const seg = document.getElementById('musicSeg');
+  seg.innerHTML = '';
+  const mk = (id, label, dur) => {
+    const b = document.createElement('button');
+    b.dataset.music = id;
+    if (id === S.music) b.classList.add('sel');
+    b.innerHTML = dur ? `${label}<small>${dur}</small>` : label;
+    b.onclick = () => setMusic(id);
+    seg.appendChild(b);
+  };
+  mk('off', 'ללא', '');
+  MUSIC.forEach(m => mk(m.id, m.label, m.dur));
+}
+
+// ══════════════════════════════════════════
 //  מצב — נשלח ל-VR
 // ══════════════════════════════════════════
 const DEFAULTS = {
@@ -420,6 +505,7 @@ function toggleAcc(id) { document.getElementById(id).classList.toggle('open'); }
 
 // סיכומים קצרים בכותרות הסקשנים
 const ENV_NAMES = { room: 'חדר רגוע', nature: 'נוף טבע', beach: 'חוף ים', sky: 'שמיים', neutral: 'ניטרלי' };
+PHOTOS.forEach(p => ENV_NAMES[p.id] = p.label);   // הוספת שמות רקעי-התמונה לסיכומים
 function updateSummaries() {
   const h = S.height > 0 ? `+${S.height}` : S.height;
   document.getElementById('sum-motion').textContent =
@@ -430,7 +516,7 @@ function updateSummaries() {
   if (S.haptic) act.push('רטט');
   document.getElementById('sum-channels').textContent = act.length ? act.join(' · ') : 'הכל כבוי';
   document.getElementById('sum-ambiance').textContent =
-    ENV_NAMES[S.env] + (S.music !== 'off' ? ` · מוזיקה ${S.music}` : '');
+    ENV_NAMES[S.env] + (S.music !== 'off' ? ` · ${MUSIC_NAMES[S.music] || 'מוזיקה'}` : '');
   document.getElementById('sum-special').textContent = S.hapticOnly ? 'פעיל' : '';
 }
 
@@ -529,7 +615,7 @@ function setPattern(p) {
 }
 function setEnv(e) {
   S.env = e;
-  document.querySelectorAll('#envSeg button').forEach(b => b.classList.toggle('sel', b.dataset.env === e));
+  document.querySelectorAll('[data-env]').forEach(b => b.classList.toggle('sel', b.dataset.env === e));
   updateSummaries(); push();
 }
 function setMusic(m) {
@@ -599,10 +685,20 @@ function drawPreview(now) {
   fitPreview();
   const W = pv.width, H = pv.height;
   pvx.clearRect(0, 0, W, H);
-  const env = ENV_COLORS[S.env] || ENV_COLORS.sky;
-  const bg = pvx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, env.top); bg.addColorStop(1, env.bottom);
-  pvx.fillStyle = bg; pvx.fillRect(0, 0, W, H);
+  if (PHOTO_IDS.has(S.env)) {
+    // רקע תמונה — ציור התמונה עצמה (cover)
+    const img = getPhotoImg(S.env);
+    if (img.complete && img.naturalWidth) {
+      const sc = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+      const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
+      pvx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    } else { pvx.fillStyle = '#0a1622'; pvx.fillRect(0, 0, W, H); }
+  } else {
+    const env = ENV_COLORS[S.env] || ENV_COLORS.sky;
+    const bg = pvx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, env.top); bg.addColorStop(1, env.bottom);
+    pvx.fillStyle = bg; pvx.fillRect(0, 0, W, H);
+  }
   if (S.running) pvPhase += dt * (0.2 + (S.speed - 1) * 0.15) * Math.PI;
   const s = H / 120;
   const swing = (0.30 + (S.swing - 1) * 0.175);
@@ -648,6 +744,8 @@ setInterval(checkConn, 1000);
 //  אתחול
 // ══════════════════════════════════════════
 buildColors();
+buildPhotos();
+buildMusic();
 ['visual','audio','haptic','hapticOnly'].forEach(updateToggleUI);
 updateSummaries();
 updateSessionUI();
