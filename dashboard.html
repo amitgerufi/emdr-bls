@@ -144,6 +144,10 @@
     .seg-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
     .seg button small { display: block; font-size: 9.5px; opacity: .6; font-weight: 500; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
+    /* רשת מוזיקה: כל הכפתורים בגודל אחיד (3 בשורה) */
+    .music-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .music-grid button { flex: none; min-width: 0; min-height: 54px; padding: 8px 6px; }
+
     /* רשת רקעי-תמונה: כפתורים עם תמונה ממוזערת */
     .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .photo-grid button {
@@ -321,6 +325,17 @@
           <div class="ch-name"><span class="ci">♪</span> אודיו — צליל מתחלף</div>
           <div class="switch on" id="sw-audio" onclick="tog('audio')"><span class="trk"></span><span class="knob"></span></div>
         </div>
+        <div class="ch-body">
+          <div class="field">
+            <span class="f-label">ווליום</span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('audioVolume',-1)">−</button>
+              <div class="track"><input type="range" id="sl-audioVolume" min="0" max="9" value="5" oninput="sl('audioVolume',this.value)"></div>
+              <button class="step-btn" onclick="step('audioVolume',1)">+</button>
+            </div>
+            <span class="f-val" id="val-audioVolume">5</span>
+          </div>
+        </div>
       </div>
 
       <div class="channel" id="ch-haptic">
@@ -362,7 +377,7 @@
       <div class="seg-label" style="margin-top:18px">רקעי תמונה 360°</div>
       <div class="seg photo-grid" id="photoSeg"></div>
       <div class="seg-label" style="margin-top:18px">מוזיקת רקע</div>
-      <div class="seg" id="musicSeg"></div>
+      <div class="seg music-grid" id="musicSeg"></div>
       <div class="field" style="margin-top:16px">
         <span class="f-label">ווליום</span>
         <div class="stepper">
@@ -481,7 +496,7 @@ function buildMusic() {
 const DEFAULTS = {
   running: false, speed: 5, swing: 5, height: 0, size: 5,
   color: '#5599ff', pattern: 'horizontal',
-  visual: true, audio: true, haptic: true, hapticStrength: 5,
+  visual: true, audio: true, audioVolume: 5, haptic: true, hapticStrength: 5,
   env: 'sky', music: 'off', musicVolume: 5, hapticOnly: false,
   sessionSeq: 0,  // איפוס מלא (סשן חדש)
   setSeq: 0,      // תחילת סט חדש (סיים סט) → מאפס חזרות במשקפת

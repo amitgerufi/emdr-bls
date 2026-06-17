@@ -48,6 +48,7 @@
       pattern:    'horizontal', // 'horizontal' | 'figure8'
       visual:     true,
       audio:      true,
+      audioVolume: 5,           // 1–9 עוצמת צליל ה-BLS (טק)
       haptic:     true,
       hapticStrength: 5,        // 1–9 עוצמת הרטט
       env:        'sky',        // סביבת רקע
@@ -178,6 +179,8 @@
     }
     function playTick(side) {
       if (!audioCtx || !S.running || !S.audio) return;
+      const peak = (S.audioVolume / 9) * 0.9;   // 1–9 → עוצמה
+      if (peak < 0.005) return;                 // ווליום 0 → שקט
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       const panner = new StereoPannerNode(audioCtx, { pan: side === 'right' ? 1 : -1 });
@@ -185,7 +188,7 @@
       osc.frequency.value = 440;
       const t = audioCtx.currentTime;
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.45, t + 0.01);
+      gain.gain.linearRampToValueAtTime(peak, t + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
       osc.connect(panner); panner.connect(gain); gain.connect(audioCtx.destination);
       osc.start(t); osc.stop(t + 0.13);
