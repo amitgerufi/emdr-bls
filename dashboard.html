@@ -185,13 +185,6 @@
     .swatch.active { border-color: #fff; }
     input[type=color] { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--line); padding: 2px; cursor: pointer; background: #222; }
 
-    /* ════ מצב מיוחד ════ */
-    .wide-tog {
-      width: 100%; padding: 15px; font-size: 14px; font-weight: 600; border: 2px solid var(--line);
-      border-radius: 14px; background: var(--surface-2); color: var(--muted); cursor: pointer;
-      font-family: inherit; text-align: center; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .wide-tog.on { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
     .help { font-size: 11.5px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
 
     /* ════ סרגל פעולה תחתון (sticky) ════ */
@@ -353,6 +346,14 @@
             </div>
             <span class="f-val" id="val-hapticStrength">5</span>
           </div>
+          <div class="ch-head" style="margin-top:18px">
+            <div class="ch-name" style="font-size:13.5px; font-weight:500; color:#cfd4e0;">📴 רטט בלבד — ללא קסדה</div>
+            <div class="switch" id="sw-hapticOnly" onclick="tog('hapticOnly')"><span class="trk"></span><span class="knob"></span></div>
+          </div>
+          <div class="help" id="hapticHelp" style="display:none">
+            המטופל מוריד את הקסדה וחווה רק רטט בידיים. כדי שהמכשיר לא יירדם —
+            יש לכבות את חיישן הקירבה דרך SideQuest / Meta Quest Developer Hub.
+          </div>
         </div>
       </div>
 
@@ -388,21 +389,6 @@
         <span class="f-val" id="val-musicVolume">5</span>
       </div>
       <div class="help">המוזיקה מתנגנת ברקע בלולאה. רצועות ארוכות מתחילות מיד (שידור תוך כדי נגינה).</div>
-    </div></div></div>
-  </div>
-
-  <!-- ════ מצב מיוחד ════ -->
-  <div class="acc" id="acc-special">
-    <button class="acc-head" onclick="toggleAcc('acc-special')">
-      <span class="acc-chev">▾</span><span class="acc-ico">📴</span>
-      <span class="acc-title">מצב מיוחד</span><span class="acc-sum" id="sum-special"></span>
-    </button>
-    <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
-      <button class="wide-tog" id="sw-hapticOnly" onclick="tog('hapticOnly')">📴 רטט בלבד — ללא קסדה</button>
-      <div class="help" id="hapticHelp" style="display:none">
-        המטופל מוריד את הקסדה וחווה רק רטט בידיים. כדי שהמכשיר לא יירדם —
-        יש לכבות את חיישן הקירבה דרך SideQuest / Meta Quest Developer Hub.
-      </div>
     </div></div></div>
   </div>
 
@@ -532,7 +518,6 @@ function updateSummaries() {
   document.getElementById('sum-channels').textContent = act.length ? act.join(' · ') : 'הכל כבוי';
   document.getElementById('sum-ambiance').textContent =
     ENV_NAMES[S.env] + (S.music !== 'off' ? ` · ${MUSIC_NAMES[S.music] || 'מוזיקה'}` : '');
-  document.getElementById('sum-special').textContent = S.hapticOnly ? 'פעיל' : '';
 }
 
 // ══════════════════════════════════════════
