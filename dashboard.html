@@ -148,19 +148,19 @@
     .music-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .music-grid button { flex: none; min-width: 0; min-height: 54px; padding: 8px 6px; }
 
-    /* רשת רקעי-תמונה: כפתורים עם תמונה ממוזערת */
-    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .photo-grid button {
+    /* רשת רקעים: כפתורים אחידים — גוון או תמונה ממוזערת */
+    .bg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .bg-grid button {
       flex: none; min-width: 0; padding: 0; height: 60px; overflow: hidden; position: relative;
       background-size: cover; background-position: center; color: #fff;
       display: flex; align-items: flex-end; justify-content: center;
     }
-    .photo-grid button span {
+    .bg-grid button span {
       width: 100%; font-size: 11px; font-weight: 600; padding: 4px 3px 3px;
       background: linear-gradient(0deg, rgba(0,0,0,.7), transparent); text-shadow: 0 1px 2px #000;
     }
-    .photo-grid button.sel { border-color: var(--accent); border-width: 2px; }
-    .photo-grid button.sel::after {
+    .bg-grid button.sel { border-color: var(--accent); border-width: 2px; }
+    .bg-grid button.sel::after {
       content: '✓'; position: absolute; top: 3px; inset-inline-end: 5px; font-size: 13px;
       color: #fff; text-shadow: 0 1px 3px #000;
     }
@@ -367,16 +367,8 @@
       <span class="acc-title">סביבה ומוזיקה</span><span class="acc-sum" id="sum-ambiance"></span>
     </button>
     <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
-      <div class="seg-label">רקע — גוונים</div>
-      <div class="seg" id="envSeg">
-        <button data-env="room"    onclick="setEnv('room')">חדר רגוע</button>
-        <button data-env="nature"  onclick="setEnv('nature')">נוף טבע</button>
-        <button data-env="beach"   onclick="setEnv('beach')">חוף ים</button>
-        <button data-env="sky"     class="sel" onclick="setEnv('sky')">שמיים</button>
-        <button data-env="neutral" onclick="setEnv('neutral')">ניטרלי</button>
-      </div>
-      <div class="seg-label" style="margin-top:18px">רקעי תמונה 360°</div>
-      <div class="seg photo-grid" id="photoSeg"></div>
+      <div class="seg-label">רקע</div>
+      <div class="seg bg-grid" id="bgSeg"></div>
       <div class="seg-label" style="margin-top:18px">מוזיקת רקע</div>
       <div class="seg music-grid" id="musicSeg"></div>
       <div class="field" style="margin-top:16px">
@@ -432,18 +424,26 @@ function getPhotoImg(id) {
   if (!photoImgs[id]) { const im = new Image(); im.src = `backgrounds/${id}.jpg`; photoImgs[id] = im; }
   return photoImgs[id];
 }
-function buildPhotos() {
-  const seg = document.getElementById('photoSeg');
+// הגוונים הישנים — מוצגים באותה רשת ככפתור עם רקע מעבר-גוון
+const GRADIENT_IDS = ['room', 'nature', 'beach', 'sky', 'neutral'];
+function buildBackgrounds() {
+  const seg = document.getElementById('bgSeg');
   seg.innerHTML = '';
-  PHOTOS.forEach(p => {
+  const mk = (id, label, bgCss) => {
     const b = document.createElement('button');
-    b.dataset.env = p.id;
-    b.style.backgroundImage = `url(backgrounds/${p.id}.jpg)`;
-    if (p.id === S.env) b.classList.add('sel');
-    b.innerHTML = `<span>${p.label}</span>`;
-    b.onclick = () => setEnv(p.id);
+    b.dataset.env = id;
+    b.style.backgroundImage = bgCss;
+    if (id === S.env) b.classList.add('sel');
+    b.innerHTML = `<span>${label}</span>`;
+    b.onclick = () => setEnv(id);
     seg.appendChild(b);
+  };
+  // גוונים תחילה, ואז רקעי תמונה — הכל באותו פורמט
+  GRADIENT_IDS.forEach(id => {
+    const c = ENV_COLORS[id];
+    mk(id, ENV_NAMES[id], `linear-gradient(180deg, ${c.top}, ${c.bottom})`);
   });
+  PHOTOS.forEach(p => mk(p.id, p.label, `url(backgrounds/${p.id}.jpg)`));
 }
 
 // ══════════════════════════════════════════
@@ -744,7 +744,7 @@ setInterval(checkConn, 1000);
 //  אתחול
 // ══════════════════════════════════════════
 buildColors();
-buildPhotos();
+buildBackgrounds();
 buildMusic();
 ['visual','audio','haptic','hapticOnly'].forEach(updateToggleUI);
 updateSummaries();
