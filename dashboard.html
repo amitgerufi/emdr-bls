@@ -167,7 +167,13 @@
 
     /* ════ שזירות — טקסט למטופל ════ */
     .iw-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .iw-grid button { flex: none; min-width: 0; min-height: 50px; text-align: center; line-height: 1.3; }
+    .iw-grid button {
+      min-height: 50px; padding: 10px 8px; font-size: 13px; font-weight: 600; line-height: 1.3;
+      text-align: center; font-family: inherit; cursor: pointer; transition: all .15s;
+      border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: #cfd4e0;
+    }
+    .iw-grid button:active { transform: scale(.96); }
+    .iw-grid button.flash { border-color: var(--accent); background: var(--accent); color: #fff; transform: scale(.96); }
     .iw-compose { display: flex; gap: 8px; }
     .iw-compose input {
       flex: 1; padding: 13px 14px; font-size: 15px; font-family: inherit; min-width: 0;
@@ -539,7 +545,11 @@ function buildInterweaves() {
   INTERWEAVES.forEach(txt => {
     const b = document.createElement('button');
     b.textContent = txt;
-    b.onclick = () => sendInterweave(txt);
+    b.onclick = () => {
+      sendInterweave(txt);
+      b.classList.add('flash');                          // הבזק "נשלח" ברור
+      setTimeout(() => b.classList.remove('flash'), 350);
+    };
     seg.appendChild(b);
   });
 }
