@@ -55,6 +55,8 @@
       music:      'off',        // 'off' | '1' | '2' | '3'
       musicVolume: 5,           // 0–9
       hapticOnly: false,
+      iwText:     '',           // טקסט שזירה להצגה למטופל ('' = ללא)
+      iwSeq:      0,            // משתנה בכל שליחה/הסתרה → מפעיל פייד-אין/אאוט
       sessionSeq: 0,            // משתנה באיפוס → מאפס פאזה/חזרות
       setSeq:     0,            // משתנה בכל פליי → מאפס פאזה/חזרות (סט חדש)
     };
@@ -244,6 +246,115 @@
     }
 
     // ══════════════════════════════════════════
+    //  שזירות — לוח טקסט צף (CanvasTexture)
+    //  נכנס בפייד-אין, מוחזק לפי אורך הטקסט, יוצא בפייד-אאוט.
+    //  ממוקם מעל מסלול הכדור כדי לא להסתיר אותו.
+    // ══════════════════════════════════════════
+    const iw = {
+      seq: 0,          // ה-iwSeq האחרון שטופל
+      synced: false,   // האם סונכרן מול המצב הראשון מ-Firebase (מונע הקפצת טקסט ישן בריענון)
+      opacity: 0,      // שקיפות נוכחית (מונפשת)
+      target: 0,       // יעד השקיפות (0 או 1)
+      hideAt: 0,       // חותמת-זמן (ms) להיעלמות אוטומטית; 0 = ללא
+      mesh: null, canvas: null, ctx: null, tex: null,
+    };
+
+    // מלבן מעוגל-פינות (עם נפילה חיננית לדפדפנים ישנים)
+    function roundRect(ctx, x, y, w, h, r) {
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function buildInterweave() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024; canvas.height = 512;
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true, opacity: 0,
+        depthWrite: false, depthTest: false, // תמיד נקרא מעל הרקע
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), mat);
+      mesh.position.set(0, 0.78, -2.0);  // מעל הכדור (y≈0, z=-1.5) ומעט מאחוריו
+      mesh.renderOrder = 10;
+      mesh.visible = false;
+      scene.add(mesh);
+      iw.canvas = canvas; iw.ctx = canvas.getContext('2d'); iw.tex = tex; iw.mesh = mesh;
+    }
+    buildInterweave();
+
+    // מצייר את הטקסט על ה-canvas (גלישת שורות + פאנל רקע שקוף-למחצה)
+    function drawInterweaveText(text) {
+      const ctx = iw.ctx, W = iw.canvas.width, H = iw.canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const fontSize = 64;
+      ctx.font = `700 ${fontSize}px Arial, sans-serif`;
+      ctx.direction = 'rtl';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // גלישת שורות לפי רוחב מרבי
+      const maxWidth = W - 140;
+      const words = text.split(/\s+/);
+      const lines = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+        else line = test;
+      }
+      if (line) lines.push(line);
+
+      const lineH = fontSize * 1.32;
+      const blockH = lines.length * lineH;
+      let maxLineW = 0;
+      lines.forEach(l => maxLineW = Math.max(maxLineW, ctx.measureText(l).width));
+
+      // פאנל רקע שקוף-למחצה בגודל הטקסט
+      const padX = 64, padY = 44;
+      const panelW = Math.min(W, maxLineW + padX * 2);
+      const panelH = blockH + padY * 2;
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      roundRect(ctx, (W - panelW) / 2, (H - panelH) / 2, panelW, panelH, 40);
+      ctx.fill();
+
+      // הטקסט עצמו — לבן עם צל לקריאוּת מול כל רקע
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(0,0,0,0.85)';
+      ctx.shadowBlur = 10;
+      let y = H / 2 - blockH / 2 + lineH / 2;
+      for (const l of lines) { ctx.fillText(l, W / 2, y); y += lineH; }
+      ctx.shadowBlur = 0;
+
+      iw.tex.needsUpdate = true;
+    }
+
+    // מגיב לשינוי iwSeq: טקסט חדש → הצגה; טקסט ריק → הסתרה
+    function applyInterweave() {
+      if (!iw.synced) { iw.synced = true; iw.seq = S.iwSeq; return; } // ריענון מאמצע סשן לא מקפיץ טקסט ישן
+      if (S.iwSeq === iw.seq) return;
+      iw.seq = S.iwSeq;
+      const txt = (S.iwText || '').trim();
+      if (txt) {
+        drawInterweaveText(txt);
+        iw.mesh.visible = true;
+        iw.target = 1;
+        // משך החזקה גדל עם אורך הטקסט (זמן קריאה), בתוספת פייד-אין
+        const hold = Math.min(14000, 3500 + txt.length * 130);
+        iw.hideAt = performance.now() + 1200 + hold;
+      } else {
+        iw.target = 0;     // פקודת הסתרה ידנית
+        iw.hideAt = 0;
+      }
+    }
+
+    // ══════════════════════════════════════════
     //  Firebase ← מאזין לפקודות מהדשבורד
     // ══════════════════════════════════════════
     let lastSessionSeq = S.sessionSeq;
@@ -268,6 +379,7 @@
       sphere.visible = S.visual;
       applyEnv(S.env);
       applyMusic();
+      applyInterweave();
       // איפוס סשן (כפתור איפוס) או תחילת סט חדש (פליי) → מאפס פאזה וחזרות
       if (S.sessionSeq !== lastSessionSeq || S.setSeq !== lastSetSeq) {
         lastSessionSeq = S.sessionSeq;
@@ -328,6 +440,15 @@
       sphere.scale.setScalar(THREE.MathUtils.lerp(sphere.scale.x, target.scale, k));
       sphere.position.y = THREE.MathUtils.lerp(sphere.position.y, target.posY, k);
       sphere.material.color.lerp(target.color, k);
+
+      // פייד חלק של לוח השזירה (כניסה/יציאה) — בלתי תלוי בתנועת הכדור
+      if (iw.mesh) {
+        if (iw.hideAt && performance.now() >= iw.hideAt) { iw.target = 0; iw.hideAt = 0; }
+        const fadeK = 1 - Math.pow(0.06, dt);   // ~1.2ש' לפייד מלא
+        iw.opacity = THREE.MathUtils.lerp(iw.opacity, iw.target, fadeK);
+        iw.mesh.material.opacity = iw.opacity;
+        if (iw.target === 0 && iw.opacity < 0.01) iw.mesh.visible = false;
+      }
 
       if (S.running) {
         const swing = toSwing(S.swing);
