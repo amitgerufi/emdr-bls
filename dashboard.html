@@ -165,6 +165,28 @@
       color: #fff; text-shadow: 0 1px 3px #000;
     }
 
+    /* ════ שזירות — טקסט למטופל ════ */
+    .iw-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .iw-grid button { flex: none; min-width: 0; min-height: 50px; text-align: center; line-height: 1.3; }
+    .iw-compose { display: flex; gap: 8px; }
+    .iw-compose input {
+      flex: 1; padding: 13px 14px; font-size: 15px; font-family: inherit; min-width: 0;
+      background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; color: var(--text);
+    }
+    .iw-compose input:focus { outline: none; border-color: var(--accent); }
+    .iw-send {
+      flex: none; padding: 0 22px; font-size: 15px; font-weight: 700; font-family: inherit;
+      background: var(--accent); border: none; color: #fff; border-radius: 12px; cursor: pointer;
+    }
+    .iw-send:active { transform: scale(.96); }
+    .iw-hide {
+      width: 100%; margin-top: 14px; padding: 13px; font-size: 14px; font-weight: 600; font-family: inherit;
+      background: var(--surface-2); border: 1px solid var(--line); color: var(--muted); border-radius: 12px; cursor: pointer;
+    }
+    .iw-hide:not(:disabled) { color: var(--amber); border-color: #463816; }
+    .iw-hide:not(:disabled):active { transform: scale(.98); }
+    .iw-hide:disabled { opacity: .45; cursor: default; }
+
     /* ════ ערוץ ════ */
     .channel + .channel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
     .ch-head { display: flex; align-items: center; justify-content: space-between; }
@@ -360,6 +382,25 @@
     </div></div></div>
   </div>
 
+  <!-- ════ שזירות — טקסט למטופל ════ -->
+  <div class="acc" id="acc-interweave">
+    <button class="acc-head" onclick="toggleAcc('acc-interweave')">
+      <span class="acc-chev">▾</span><span class="acc-ico">💬</span>
+      <span class="acc-title">שזירות — טקסט למטופל</span><span class="acc-sum" id="sum-interweave"></span>
+    </button>
+    <div class="acc-body"><div class="acc-inner"><div class="acc-pad">
+      <div class="seg-label">משפטים מוכנים — לחיצה שולחת מיד</div>
+      <div class="iw-grid" id="iwPresets"></div>
+      <div class="seg-label" style="margin-top:18px">טקסט חופשי</div>
+      <div class="iw-compose">
+        <input type="text" id="iwInput" placeholder="כתוב/י משפט ושלח/י…" autocomplete="off">
+        <button class="iw-send" onclick="sendFromInput()">שלח</button>
+      </div>
+      <button class="iw-hide" id="iwHideBtn" onclick="hideInterweave()" disabled>⤫ הסתר טקסט מהמטופל</button>
+      <div class="help" id="iwStatus">אין טקסט מוצג כרגע. הטקסט נכנס בפייד-אין ויוצא אוטומטית.</div>
+    </div></div></div>
+  </div>
+
   <!-- ════ סביבה ומוזיקה ════ -->
   <div class="acc" id="acc-ambiance">
     <button class="acc-head" onclick="toggleAcc('acc-ambiance')">
@@ -477,6 +518,73 @@ function buildMusic() {
 }
 
 // ══════════════════════════════════════════
+//  שזירות — משפטים מוכנים + טקסט חופשי
+//  (ניתן לערוך/להוסיף משפטים ברשימה למטה)
+// ══════════════════════════════════════════
+const INTERWEAVES = [
+  'את/ה בטוח/ה עכשיו',
+  'זה נגמר',
+  'זה שייך לעבר',
+  'את/ה כאן, בהווה',
+  'עשית כמיטב יכולתך',
+  'זאת לא אשמתך',
+  'את/ה לא לבד',
+  'אפשר לשחרר',
+  'קח/י נשימה עמוקה',
+  'את/ה חזק/ה מספיק',
+];
+function buildInterweaves() {
+  const seg = document.getElementById('iwPresets');
+  seg.innerHTML = '';
+  INTERWEAVES.forEach(txt => {
+    const b = document.createElement('button');
+    b.textContent = txt;
+    b.onclick = () => sendInterweave(txt);
+    seg.appendChild(b);
+  });
+}
+
+let iwTimer = null;   // טיימר מקומי המשקף את ההיעלמות האוטומטית במשקפת
+function sendInterweave(text) {
+  const t = (text || '').trim();
+  if (!t) return;
+  S.iwText = t;
+  S.iwSeq = (S.iwSeq || 0) + 1;
+  push();
+  setIwStatus(t);
+  // משך מוערך עד היעלמות מלאה (חייב להתאים ל-index.html): פייד-אין + החזקה + פייד-אאוט
+  const hold = Math.min(14000, 3500 + t.length * 130);
+  clearTimeout(iwTimer);
+  iwTimer = setTimeout(() => setIwStatus(''), 1200 + hold + 1200);
+}
+function sendFromInput() {
+  const inp = document.getElementById('iwInput');
+  const t = inp.value.trim();
+  if (!t) return;
+  sendInterweave(t);
+  inp.value = '';
+}
+function hideInterweave() {
+  S.iwText = '';
+  S.iwSeq = (S.iwSeq || 0) + 1;
+  push();
+  clearTimeout(iwTimer);
+  setIwStatus('');
+}
+function setIwStatus(t) {
+  pvIw = t || '';   // משקף בתצוגה המקדימה
+  const status = document.getElementById('iwStatus');
+  const btn = document.getElementById('iwHideBtn');
+  if (t) {
+    status.textContent = `מוצג כעת: "${t}" — נעלם אוטומטית, או לחצ/י הסתר.`;
+    btn.disabled = false;
+  } else {
+    status.textContent = 'אין טקסט מוצג כרגע. הטקסט נכנס בפייד-אין ויוצא אוטומטית.';
+    btn.disabled = true;
+  }
+}
+
+// ══════════════════════════════════════════
 //  מצב — נשלח ל-VR
 // ══════════════════════════════════════════
 const DEFAULTS = {
@@ -484,6 +592,7 @@ const DEFAULTS = {
   color: '#5599ff', pattern: 'horizontal',
   visual: true, audio: true, audioVolume: 5, haptic: true, hapticStrength: 5,
   env: 'sky', music: 'off', musicVolume: 5, hapticOnly: false,
+  iwText: '', iwSeq: 0,  // טקסט שזירה למטופל + מונה שליחות
   sessionSeq: 0,  // איפוס מלא (סשן חדש)
   setSeq: 0,      // תחילת סט חדש (סיים סט) → מאפס חזרות במשקפת
 };
@@ -674,6 +783,7 @@ const ENV_COLORS = {
 const pv = document.getElementById('preview');
 const pvx = pv.getContext('2d');
 let pvPhase = 0, pvLast = performance.now();
+let pvIw = '';   // טקסט שזירה המוצג כרגע בתצוגה המקדימה
 function fitPreview() {
   const rect = pv.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -715,6 +825,23 @@ function drawPreview(now) {
     pvx.fillStyle = S.color;
     pvx.beginPath(); pvx.arc(cx, cy, r, 0, Math.PI * 2); pvx.fill();
   }
+  // לוח שזירה — תצוגה מקדימה של הטקסט המוצג למטופל (בחלק העליון)
+  if (pvIw) {
+    pvx.save();
+    pvx.direction = 'rtl'; pvx.textAlign = 'center'; pvx.textBaseline = 'middle';
+    const fs = 13 * s;
+    pvx.font = `700 ${fs}px Arial, sans-serif`;
+    const pad = 9 * s;
+    const bw = Math.min(W - 12 * s, pvx.measureText(pvIw).width + pad * 2);
+    const bh = fs + pad, bx = (W - bw) / 2, by = 9 * s;
+    pvx.fillStyle = 'rgba(0,0,0,0.55)';
+    pvx.beginPath();
+    if (pvx.roundRect) pvx.roundRect(bx, by, bw, bh, 7 * s); else pvx.rect(bx, by, bw, bh);
+    pvx.fill();
+    pvx.fillStyle = '#fff';
+    pvx.fillText(pvIw, W / 2, by + bh / 2);
+    pvx.restore();
+  }
   requestAnimationFrame(drawPreview);
 }
 requestAnimationFrame(drawPreview);
@@ -746,6 +873,8 @@ setInterval(checkConn, 1000);
 buildColors();
 buildBackgrounds();
 buildMusic();
+buildInterweaves();
+document.getElementById('iwInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendFromInput(); });
 ['visual','audio','haptic','hapticOnly'].forEach(updateToggleUI);
 updateSummaries();
 updateSessionUI();
