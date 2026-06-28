@@ -600,8 +600,9 @@
           pulseHaptic('left'); playTick('left');
         }
       } else {
-        // עצירה / סיום סט — מחזירים את הכדור בעדינות למרכז (X) במקום להשאיר אותו קפוא בצד
-        sphere.position.x = THREE.MathUtils.lerp(sphere.position.x, 0, k);
+        // עצירה / סיום סט — מחזירים את הכדור באיטיות למרכז (X) במקום להשאיר אותו קפוא בצד
+        const kReturn = 1 - Math.pow(0.3, dt); // ~2.5 שניות לחזרה מלאה (איטי בכוונה)
+        sphere.position.x = THREE.MathUtils.lerp(sphere.position.x, 0, kReturn);
         hapticR = false; hapticL = false; // הסט הבא יתחיל נקי מאזורי הטריגר
       }
 
