@@ -74,9 +74,9 @@ export default function DashboardPage() {
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_-5%,var(--secondary)_0%,transparent_55%)]"
       />
 
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/70 bg-card/85 px-4 py-3 backdrop-blur-md">
-        <Brand />
-        <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 border-b border-border/70 bg-card/85 px-3 py-2.5 backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3">
+        <Brand compact />
+        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <ConnectionBadge connected={panel.connected} />
           {pin && <PinBadge pin={pin} />}
           <LanguageToggle />
