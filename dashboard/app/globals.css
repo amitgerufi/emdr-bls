@@ -138,6 +138,13 @@
   }
 }
 
+/* Elevation recipe — replaces flat shadow-sm everywhere a surface needs to
+   visibly lift off the page rather than just having a hairline border. */
+@theme {
+  --shadow-elevated: 0 1px 2px rgba(16, 42, 54, 0.04), 0 12px 28px -10px rgba(16, 42, 54, 0.14);
+  --shadow-elevated-lg: 0 2px 4px rgba(16, 42, 54, 0.05), 0 20px 40px -12px rgba(16, 42, 54, 0.18);
+}
+
 /* Accessibility: honor reduced-motion preferences (clinical / inclusive). */
 @media (prefers-reduced-motion: reduce) {
   *,
