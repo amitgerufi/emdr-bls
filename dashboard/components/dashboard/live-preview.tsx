@@ -92,15 +92,15 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
         ctx.fillRect(0, 0, W, H);
       }
 
-      const k = 1 - Math.pow(0.001, dt); // lerp עצמאי-קצב-פריימים, תואם ל-index.html
       if (s.running) {
         phase += dt * (0.2 + (s.speed - 1) * 0.15) * Math.PI;
         drawnSinX = Math.sin(phase);
         drawnSinY = Math.sin(phase * 2);
       } else {
-        // עצירה / סיום סט — מחזירים את הכדור בעדינות למרכז במקום להשאיר אותו קפוא בצד
-        drawnSinX = drawnSinX * (1 - k);
-        drawnSinY = drawnSinY * (1 - k);
+        // עצירה / סיום סט — מחזירים את הכדור באיטיות למרכז, תואם ל-index.html
+        const kReturn = 1 - Math.pow(0.3, dt); // ~2.5 שניות לחזרה מלאה
+        drawnSinX = drawnSinX * (1 - kReturn);
+        drawnSinY = drawnSinY * (1 - kReturn);
       }
       const scaleFactor = H / 120;
       const swing = 0.3 + (s.swing - 1) * 0.175;
