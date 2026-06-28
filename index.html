@@ -173,6 +173,10 @@
     const photoCache = {};       // id → THREE.Texture (נטען פעם אחת בלבד)
     let   currentEnv = null;     // הרקע המוצג כעת — מונע טעינה חוזרת בכל עדכון
 
+    // כיוונון התפר של תמונות הרקע (360°) כך שייפול מאחורי הראש.
+    // 0.25 = רבע סיבוב (90°). אם התפר זז לכיוון הלא נכון — להפוך לשלילי (-0.25).
+    const PHOTO_SEAM_OFFSET = 0.25;
+
     function setGradient(e) {
       if (skyMat.map && skyMat.map.isCanvasTexture) skyMat.map.dispose();
       skyMat.map = makeGradientTexture(e.top, e.bottom);
@@ -194,6 +198,10 @@
       // טעינה ראשונה (אסינכרונית)
       texLoader.load(`backgrounds/${name}.jpg`, tex => {
         tex.colorSpace = THREE.SRGBColorSpace;
+        // התפר של התמונות (360°) נמצא בגלגול לא-מסונכרן עם כיוון המבט הקדמי —
+        // מסובבים את הטקסטורה אופקית כדי שהתפר ייפול מאחורי הראש ולא בשדה הראייה.
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.offset.x = PHOTO_SEAM_OFFSET;
         photoCache[name] = tex;
         if (currentEnv === name) {          // עדיין הרקע הנבחר?
           skyMat.map = tex; skyMat.needsUpdate = true;
