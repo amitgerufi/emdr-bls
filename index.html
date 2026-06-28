@@ -415,6 +415,10 @@
     let roomId = null;
     let fbStream = null;
     let statusTimer = null;
+    let phase = 0;   // פאזת התנועה — צוברת לאורך זמן (פתרון הקפיצה)
+    let reps  = 0;   // מונה חזרות (מחזורים מלאים) — מוצב כאן (לא בלולאת האנימציה) כי
+                     // reportStatus() עליו נסמך עלול לרוץ באופן סינכרוני כבר מההתחברות
+                     // האוטומטית (localStorage) למעלה, לפני שהקוד מגיע ללולאת האנימציה.
 
     function connectFirebase(id) {
       if (fbStream) fbStream.close();
@@ -536,8 +540,6 @@
     const clock = new THREE.Clock();
     let prevA = false, prevB = false;
     let hapticR = false, hapticL = false;
-    let phase = 0;   // פאזת התנועה — צוברת לאורך זמן (פתרון הקפיצה)
-    let reps  = 0;   // מונה חזרות (מחזורים מלאים)
 
     renderer.setAnimationLoop(() => {
       const dt = clock.getDelta();
