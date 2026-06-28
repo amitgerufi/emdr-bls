@@ -47,6 +47,8 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
     if (!canvas || !ctx) return;
 
     let phase = 0;
+    let drawnSinX = 0; // ערך sin מצויר בפועל — נע ל-0 בעדינות כשהתנועה לא רצה
+    let drawnSinY = 0;
     let last = performance.now();
     let raf = 0;
 
@@ -90,13 +92,22 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
         ctx.fillRect(0, 0, W, H);
       }
 
-      if (s.running) phase += dt * (0.2 + (s.speed - 1) * 0.15) * Math.PI;
+      const k = 1 - Math.pow(0.001, dt); // lerp עצמאי-קצב-פריימים, תואם ל-index.html
+      if (s.running) {
+        phase += dt * (0.2 + (s.speed - 1) * 0.15) * Math.PI;
+        drawnSinX = Math.sin(phase);
+        drawnSinY = Math.sin(phase * 2);
+      } else {
+        // עצירה / סיום סט — מחזירים את הכדור בעדינות למרכז במקום להשאיר אותו קפוא בצד
+        drawnSinX = drawnSinX * (1 - k);
+        drawnSinY = drawnSinY * (1 - k);
+      }
       const scaleFactor = H / 120;
       const swing = 0.3 + (s.swing - 1) * 0.175;
       const margin = 34 * scaleFactor;
-      const cx = W / 2 + Math.sin(phase) * ((W / 2 - margin) * (swing / 1.7));
+      const cx = W / 2 + drawnSinX * ((W / 2 - margin) * (swing / 1.7));
       let cy = H / 2 - s.height * 6 * scaleFactor;
-      if (s.pattern === "figure8") cy += Math.sin(phase * 2) * (H / 4) * (swing / 1.7);
+      if (s.pattern === "figure8") cy += drawnSinY * (H / 4) * (swing / 1.7);
       const r = (6 + (s.size - 1) * 2.2) * scaleFactor;
 
       const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2.2);
