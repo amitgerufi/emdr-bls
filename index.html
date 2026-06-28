@@ -174,8 +174,8 @@
     let   currentEnv = null;     // הרקע המוצג כעת — מונע טעינה חוזרת בכל עדכון
 
     // כיוונון התפר של תמונות הרקע (360°) כך שייפול מאחורי הראש.
-    // 0.25 = רבע סיבוב (90°). אם התפר זז לכיוון הלא נכון — להפוך לשלילי (-0.25).
-    const PHOTO_SEAM_OFFSET = 0.25;
+    // 0.25 הזיז את התפר לממש מול העיניים (חצי סיבוב לא נכון) → +0.5 נוסף (0.75) מביא אותו לצד הנגדי המדויק.
+    const PHOTO_SEAM_OFFSET = 0.75;
 
     function setGradient(e) {
       if (skyMat.map && skyMat.map.isCanvasTexture) skyMat.map.dispose();
