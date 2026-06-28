@@ -20,7 +20,7 @@ export function ActionBar({ running, endSetDisabled, onTogglePlay, onEndSet }: A
   const setInProgress = !endSetDisabled;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-card/95 p-3 shadow-elevated-lg backdrop-blur-md">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-card/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-elevated-lg backdrop-blur-md">
       <div className="mx-auto flex max-w-3xl gap-2.5">
         <Button
           type="button"

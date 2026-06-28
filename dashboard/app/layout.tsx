@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "EMDR BLS — Therapist Dashboard",
   description:
     "Control platform for bilateral stimulation in VR EMDR therapy. No patient-identifying data is ever stored.",
+};
+
+// viewportFit: "cover" lets fixed header/footer read real safe-area-inset-*
+// values on notch/home-indicator devices instead of getting 0.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
