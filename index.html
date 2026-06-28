@@ -12,10 +12,60 @@
       font-family: Arial, sans-serif; font-size: 13px;
       pointer-events: none;
     }
+
+    /* מסך הזדהות PIN — חוסם את החוויה עד שמתחברים לחדר של מטפל/ת ספציפי/ת */
+    #pinScreen {
+      position: fixed; inset: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: center;
+      background: #0a1622;
+      font-family: Arial, sans-serif; direction: rtl;
+    }
+    #pinScreen.hidden { display: none; }
+    #pinCard {
+      width: min(86vw, 360px);
+      background: #11222e; border: 1px solid #ffffff1a; border-radius: 20px;
+      padding: 32px 28px; text-align: center; color: #fff;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    #pinCard h1 { margin: 0 0 6px; font-size: 20px; font-weight: 700; }
+    #pinCard p { margin: 0 0 22px; font-size: 13px; color: #9bb4c0; line-height: 1.5; }
+    #pinInput {
+      width: 100%; box-sizing: border-box; text-align: center;
+      font-size: 28px; font-weight: 700; letter-spacing: 8px;
+      padding: 14px 0; border-radius: 12px; border: 1px solid #ffffff2a;
+      background: #0a1622; color: #fff; margin-bottom: 14px;
+    }
+    #pinInput:focus { outline: none; border-color: #22d3ee; }
+    #pinSubmit {
+      width: 100%; padding: 14px 0; border-radius: 12px; border: none;
+      background: #0891b2; color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer;
+    }
+    #pinSubmit:disabled { opacity: 0.5; cursor: default; }
+    #pinError { margin-top: 12px; font-size: 13px; color: #f87171; min-height: 16px; }
+
+    /* קישור עדין להחלפת חדר (גלוי רק לאחר התחברות) */
+    #changeRoom {
+      position: fixed; bottom: 10px; inset-inline-end: 12px; z-index: 40;
+      font-family: Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.35);
+      cursor: pointer; user-select: none;
+    }
+    #changeRoom.hidden { display: none; }
   </style>
 </head>
 <body>
   <div id="info">EMDR BLS | לחץ "Enter VR"</div>
+
+  <div id="pinScreen">
+    <div id="pinCard">
+      <h1>EMDR BLS</h1>
+      <p>הזן/י את קוד ה-PIN בן 4 הספרות המוצג בדשבורד של המטפל/ת כדי להתחבר לחדר.</p>
+      <input id="pinInput" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+      <button id="pinSubmit" type="button">התחברות</button>
+      <div id="pinError"></div>
+    </div>
+  </div>
+  <div id="changeRoom" class="hidden">החלפת קוד PIN</div>
 
   <script type="importmap">
   {
@@ -356,19 +406,26 @@
 
     // ══════════════════════════════════════════
     //  Firebase ← מאזין לפקודות מהדשבורד
+    //  נתיב ספציפי-לחדר (sessions/{roomId}) — roomId מתקבל ממסך ה-PIN למטה.
+    //  הארכיטקטורה הישנה השתמשה בנתיב גלובלי יחיד (emdr.json); כעת כל מטפל/ת
+    //  מקבל/ת חדר נפרד, בדיוק כמו שהדשבורד החדש כותב אליו.
     // ══════════════════════════════════════════
     let lastSessionSeq = S.sessionSeq;
     let lastSetSeq = S.setSeq;
+    let roomId = null;
+    let fbStream = null;
+    let statusTimer = null;
 
-    function connectFirebase() {
-      const stream = new EventSource(`${DB}/emdr.json`);
-      stream.addEventListener('put', e => {
+    function connectFirebase(id) {
+      if (fbStream) fbStream.close();
+      fbStream = new EventSource(`${DB}/sessions/${id}.json`);
+      fbStream.addEventListener('put', e => {
         const { data } = JSON.parse(e.data);
         if (!data) return;
         Object.assign(S, data);
         applyAll();
       });
-      stream.addEventListener('error', () => { /* יתחבר מחדש אוטומטית */ });
+      fbStream.addEventListener('error', () => { /* יתחבר מחדש אוטומטית */ });
     }
 
     // מחיל את כל הפרמטרים אחרי עדכון מהדשבורד
@@ -388,19 +445,82 @@
       }
     }
 
-    connectFirebase();
-
     // ══════════════════════════════════════════
-    //  Firebase → דיווח סטטוס (נוכחות + חזרות)
+    //  Firebase → דיווח סטטוס (נוכחות + חזרות) — לפי roomId
     // ══════════════════════════════════════════
     function reportStatus() {
-      fetch(`${DB}/status.json`, {
+      if (!roomId) return;
+      fetch(`${DB}/status/${roomId}.json`, {
         method: 'PUT',
         body: JSON.stringify({ alive: Date.now(), reps, running: S.running }),
         headers: { 'Content-Type': 'application/json' },
       }).catch(() => {});
     }
-    setInterval(reportStatus, 1000); // heartbeat כל שנייה
+
+    // ══════════════════════════════════════════
+    //  הזדהות PIN — פותר קוד PIN ל-roomId דרך pins/{pin}, ונזכר ב-localStorage
+    //  כדי שהקסדה תתחבר אוטומטית לאותו חדר בפעמים הבאות (אותו מטפל/ת, אותה קסדה).
+    // ══════════════════════════════════════════
+    const ROOM_STORAGE_KEY = 'emdrBlsRoomId';
+
+    const pinScreen   = document.getElementById('pinScreen');
+    const pinInput    = document.getElementById('pinInput');
+    const pinSubmit   = document.getElementById('pinSubmit');
+    const pinErrorEl  = document.getElementById('pinError');
+    const changeRoomEl = document.getElementById('changeRoom');
+
+    function startSession(id) {
+      roomId = id;
+      localStorage.setItem(ROOM_STORAGE_KEY, id);
+      pinScreen.classList.add('hidden');
+      changeRoomEl.classList.remove('hidden');
+      connectFirebase(id);
+      reportStatus();
+      if (statusTimer) clearInterval(statusTimer);
+      statusTimer = setInterval(reportStatus, 1000); // heartbeat כל שנייה
+    }
+
+    async function resolveRoomId(pin) {
+      const res = await fetch(`${DB}/pins/${pin}.json`);
+      return res.json(); // roomId (string) או null אם הקוד לא קיים
+    }
+
+    async function submitPin() {
+      const pin = pinInput.value.trim();
+      if (!/^\d{4}$/.test(pin)) {
+        pinErrorEl.textContent = 'יש להזין קוד בן 4 ספרות.';
+        return;
+      }
+      pinSubmit.disabled = true;
+      pinErrorEl.textContent = '';
+      try {
+        const id = await resolveRoomId(pin);
+        if (!id) {
+          pinErrorEl.textContent = 'קוד לא נמצא. בדוק/י מול המטפל/ת ונסה/י שוב.';
+          return;
+        }
+        startSession(id);
+      } catch {
+        pinErrorEl.textContent = 'תקלת תקשורת. נסה/י שוב.';
+      } finally {
+        pinSubmit.disabled = false;
+      }
+    }
+
+    pinSubmit.addEventListener('click', submitPin);
+    pinInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitPin(); });
+    pinInput.addEventListener('input', () => {
+      pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 4);
+    });
+    changeRoomEl.addEventListener('click', () => {
+      localStorage.removeItem(ROOM_STORAGE_KEY);
+      location.reload();
+    });
+
+    // חיבור אוטומטי אם כבר נשמר roomId ממפגש קודם באותה קסדה
+    const savedRoomId = localStorage.getItem(ROOM_STORAGE_KEY);
+    if (savedRoomId) startSession(savedRoomId);
+    else pinInput.focus();
 
     // ══════════════════════════════════════════
     //  קונטרולרים (בקאפ ללא דשבורד)
