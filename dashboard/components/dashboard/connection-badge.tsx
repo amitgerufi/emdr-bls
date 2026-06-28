@@ -8,14 +8,16 @@ export function ConnectionBadge({ connected }: { connected: boolean }) {
   return (
     <Badge
       variant="outline"
+      title={connected ? t("headsetConnected") : t("disconnected")}
+      aria-label={connected ? t("headsetConnected") : t("disconnected")}
       className={
         connected
-          ? "h-7 gap-1.5 px-2.5 border-emerald-600/30 bg-emerald-600/10 text-emerald-700 shadow-sm dark:text-emerald-400"
-          : "h-7 gap-1.5 px-2.5 border-destructive/30 bg-destructive/10 text-destructive shadow-sm"
+          ? "h-7 gap-1.5 px-2 sm:px-2.5 border-emerald-600/30 bg-emerald-600/10 text-emerald-700 shadow-sm dark:text-emerald-400"
+          : "h-7 gap-1.5 px-2 sm:px-2.5 border-destructive/30 bg-destructive/10 text-destructive shadow-sm"
       }
     >
       <span className={`size-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-destructive"}`} />
-      {connected ? t("headsetConnected") : t("disconnected")}
+      <span className="hidden sm:inline">{connected ? t("headsetConnected") : t("disconnected")}</span>
     </Badge>
   );
 }
