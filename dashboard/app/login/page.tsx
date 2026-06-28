@@ -5,14 +5,17 @@ import { useRouter } from "next/navigation";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { useLanguage } from "@/lib/language-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Brand } from "@/components/brand";
 import { GoogleIcon } from "@/components/google-icon";
+import { LanguageToggle } from "@/components/language-toggle";
 import { FullScreenLoader } from "@/components/full-screen-loader";
 
 export default function LoginPage() {
   const { user, loading, signInWithGoogle } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [signingIn, setSigningIn] = useState(false);
 
@@ -34,8 +37,8 @@ export default function LoginPage() {
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         return;
       }
-      toast.error("ההתחברות נכשלה", {
-        description: "אירעה תקלה בהתחברות עם Google. נסה/י שוב.",
+      toast.error(t("signInFailedTitle"), {
+        description: t("signInFailedDesc"),
       });
     } finally {
       setSigningIn(false);
@@ -50,16 +53,16 @@ export default function LoginPage() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_-10%,var(--secondary)_0%,transparent_60%)]"
       />
 
+      <LanguageToggle className="absolute top-5 end-5" />
+
       <Card className="w-full max-w-md rounded-3xl border-border/70 shadow-xl shadow-primary/5">
         <CardContent className="flex flex-col items-center gap-8 px-8 py-10 text-center">
           <Brand />
 
           <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              ברוך/ה הבא/ה
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("welcome")}</h1>
             <p className="text-balance text-sm leading-relaxed text-muted-foreground">
-              התחבר/י כדי לנהל סשן EMDR בזמן אמת ולשלוט בגירוי הבילטרלי של המטופל/ת.
+              {t("loginSubtitle")}
             </p>
           </div>
 
@@ -75,12 +78,12 @@ export default function LoginPage() {
             ) : (
               <GoogleIcon className="size-5" />
             )}
-            {signingIn ? "מתחבר/ת…" : "התחברות עם Google"}
+            {signingIn ? t("signingIn") : t("signInWithGoogle")}
           </Button>
 
           <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="size-4 text-accent" aria-hidden />
-            לא נשמרים פרטים מזהים של מטופלים — לעולם.
+            {t("noPatientData")}
           </p>
         </CardContent>
       </Card>

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
+import { LanguageProvider } from "@/lib/language-context";
 import "./globals.css";
 
-// Heebo — clean, clinical Hebrew + Latin sans (Roboto-derived). Chosen over the
-// design skill's Latin-only pairing because this app is Hebrew/RTL.
+// Heebo — clean Hebrew + Latin sans (Roboto-derived). Both scripts are needed
+// since the app's language toggle can switch to Hebrew at runtime.
 const heebo = Heebo({
   variable: "--font-sans",
   subsets: ["hebrew", "latin"],
@@ -13,9 +14,9 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "EMDR BLS — דשבורד מטפל",
+  title: "EMDR BLS — Therapist Dashboard",
   description:
-    "פלטפורמת בקרה לטיפול EMDR בגירוי בילטרלי במציאות מדומה. ללא שמירת פרטים מזהים של מטופלים.",
+    "Control platform for bilateral stimulation in VR EMDR therapy. No patient-identifying data is ever stored.",
 };
 
 export default function RootLayout({
@@ -25,14 +26,16 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="he"
-      dir="rtl"
+      lang="en"
+      dir="ltr"
       className={`${heebo.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider>
-        <Toaster richColors position="top-center" />
+        <LanguageProvider>
+          <AuthProvider>{children}</AuthProvider>
+          <Toaster richColors position="top-center" />
+        </LanguageProvider>
       </body>
     </html>
   );
