@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "//": "EMDR BLS — Realtime Database security rules. Replaces the expiring 30-day test-mode rules. Patient (Quest) client is UNAUTHENTICATED (REST), so session reads, pin reads, and status writes must stay public; the therapist dashboard is authenticated with auth.uid === roomId. The critical hardening: only the authenticated room owner may WRITE the live session, so an attacker can't control or inject into a patient's headset.",
+
+    "sessions": {
+      "$roomId": {
+        ".read": true,
+        ".write": "auth != null && auth.uid === $roomId"
+      }
+    },
+
+    "status": {
+      "$roomId": {
+        ".read": "auth != null && auth.uid === $roomId",
+        ".write": true
+      }
+    },
+
+    "pins": {
+      "$pin": {
+        ".read": true,
+        ".write": "auth != null && newData.val() === auth.uid && (!data.exists() || data.val() === auth.uid)"
+      }
+    }
+  }
+}
