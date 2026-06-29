@@ -1,0 +1,37 @@
+name: CI
+
+# Runs quality checks on every push to main and on every pull request, so
+# broken code can't reach main (or get auto-deployed to production by Vercel).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    name: Lint, type-check & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # No committed package-lock.json in this repo, so install (not ci).
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      # Build also runs Next's own lint + type checks — the broadest gate.
+      # Succeeds without Firebase env vars (the app is client-rendered).
+      - name: Build
+        run: npm run build
