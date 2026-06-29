@@ -51,6 +51,13 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
     let drawnSinY = 0;
     let last = performance.now();
     let raf = 0;
+    // Fading motion trail — the ball's recent path, oscilloscope-style. Older
+    // points fade out, giving the "command-deck monitor" its live feel.
+    const trail: { x: number; y: number }[] = [];
+    const TRAIL_MAX = 18;
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     const fit = () => {
       const rect = canvas.getBoundingClientRect();
@@ -110,6 +117,27 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
       if (s.pattern === "figure8") cy += drawnSinY * (H / 4) * (swing / 1.7);
       const r = (6 + (s.size - 1) * 2.2) * scaleFactor;
 
+      // Fading motion trail — recorded only while running, drawn behind the ball.
+      if (s.visual && !reduceMotion) {
+        if (s.running) {
+          trail.push({ x: cx, y: cy });
+          if (trail.length > TRAIL_MAX) trail.shift();
+        } else if (trail.length) {
+          trail.shift();
+        }
+        for (let i = 0; i < trail.length; i++) {
+          const p = trail[i];
+          const f = (i + 1) / trail.length; // older = smaller/fainter
+          const tr = r * (0.35 + f * 0.5);
+          ctx.globalAlpha = f * 0.4;
+          ctx.fillStyle = s.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, tr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
       const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2.2);
       glow.addColorStop(0, `${s.color}99`);
       glow.addColorStop(1, `${s.color}00`);
@@ -156,9 +184,29 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-[#0a1622] shadow-elevated">
-      <canvas ref={canvasRef} className="block h-[120px] w-full" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 py-1.5 text-[11px] font-medium text-white/90">
+    <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-[#060e16] shadow-elevated glow-signal">
+      <canvas ref={canvasRef} className="block h-[128px] w-full lg:h-[168px]" />
+
+      {/* Telemetry overlay — instrument readouts in mono (Latin/numerals only). */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-3 py-2">
+        <span
+          className={`telemetry flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] ${
+            state.running
+              ? "bg-emerald-400/15 text-emerald-300"
+              : "bg-white/10 text-white/70"
+          }`}
+        >
+          <span
+            className={`size-1.5 rounded-full ${
+              state.running ? "bg-emerald-400 animate-signal-pulse" : "bg-white/50"
+            }`}
+          />
+          {state.running ? "LIVE" : "IDLE"}
+        </span>
+        <span className="telemetry text-[10px] text-white/70">SPEED {state.speed}</span>
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 py-1.5 text-[11px] font-medium text-white/90">
         {t("livePreviewTag")}
       </div>
     </div>

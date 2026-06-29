@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Brand } from "@/components/brand";
 import { GoogleIcon } from "@/components/google-icon";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { FullScreenLoader } from "@/components/full-screen-loader";
 
 export default function LoginPage() {
@@ -47,15 +48,15 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-dvh flex-1 items-center justify-center overflow-hidden px-5 py-12">
-      {/* Soft clinical backdrop — subtle cyan wash, no harsh color. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_55%_at_50%_-10%,var(--secondary)_0%,transparent_60%)]"
-      />
+      {/* Ambient aurora — same living backdrop as the deck. */}
+      <div aria-hidden className="aurora pointer-events-none absolute inset-0 -z-10" />
 
-      <LanguageToggle className="absolute top-5 end-5" />
+      <div className="absolute top-5 end-5 flex items-center gap-2">
+        <ThemeToggle />
+        <LanguageToggle />
+      </div>
 
-      <Card className="w-full max-w-md rounded-3xl border-border/70 shadow-xl shadow-primary/5">
+      <Card className="glass w-full max-w-md rounded-3xl shadow-elevated-lg">
         <CardContent className="flex flex-col items-center gap-8 px-8 py-10 text-center">
           <Brand />
 

@@ -66,16 +66,16 @@ export function SessionHero({
 
       <div className="p-4">
         <div className="flex gap-2">
-          <StatTile label={t("statSets")} value={String(sets)} />
-          <StatTile label={t("statReps")} value={String(reps)} />
-          <StatTile label={t("statSetTime")} value={fmt(setSecs)} />
-          <StatTile label={t("statTotalTime")} value={fmt(totalSecs)} />
+          <StatTile label={t("statSets")} value={String(sets)} accent="var(--chart-1)" />
+          <StatTile label={t("statReps")} value={String(reps)} accent="var(--chart-2)" />
+          <StatTile label={t("statSetTime")} value={fmt(setSecs)} accent="var(--chart-3)" />
+          <StatTile label={t("statTotalTime")} value={fmt(totalSecs)} accent="var(--chart-4)" />
         </div>
 
         <div className="mt-3.5 rounded-2xl border border-primary/20 bg-gradient-to-br from-secondary to-secondary/40 p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
           <div className="mb-3 flex items-baseline justify-between">
             <span className="text-[15px] font-bold">{t("speed")}</span>
-            <span className="text-3xl font-extrabold tabular-nums text-primary">{speed}</span>
+            <span className="metric text-4xl text-primary drop-shadow-[0_0_12px_color-mix(in_srgb,var(--signal)_45%,transparent)]">{speed}</span>
           </div>
           <div className="flex items-center gap-3.5">
             <button

@@ -11,15 +11,24 @@ export function Brand({ className, compact = false }: { className?: string; comp
     <div className={cn("flex items-center gap-2 sm:gap-3", className)}>
       <span
         className={cn(
-          "grid place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm",
+          "grid place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground glow-signal",
           compact ? "size-8" : "size-10",
         )}
       >
         <Activity className={compact ? "size-4" : "size-5"} strokeWidth={2.25} aria-hidden />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className={cn("font-bold tracking-tight", compact ? "text-sm" : "text-base")}>EMDR BLS</span>
-        {!compact && <span className="text-xs font-medium text-muted-foreground">{t("appTagline")}</span>}
+        <span
+          className={cn(
+            "font-display font-semibold tracking-tight bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent",
+            compact ? "text-[15px]" : "text-lg",
+          )}
+        >
+          EMDR BLS
+        </span>
+        {!compact && (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground">{t("appTagline")}</span>
+        )}
       </span>
     </div>
   );
