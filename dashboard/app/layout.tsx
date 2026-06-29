@@ -1,15 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Heebo } from "next/font/google";
+import { Heebo, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
 import { LanguageProvider } from "@/lib/language-context";
 import "./globals.css";
 
 // Heebo — clean Hebrew + Latin sans (Roboto-derived). Both scripts are needed
-// since the app's language toggle can switch to Hebrew at runtime.
+// since the app's language toggle can switch to Hebrew at runtime. This stays
+// the body font for ALL translatable text so Hebrew never falls back.
 const heebo = Heebo({
   variable: "--font-sans",
   subsets: ["hebrew", "latin"],
+  display: "swap",
+});
+
+// Space Grotesk — Latin-only display face for the wordmark and the oversized
+// "command deck" metric numerals. Never applied to translatable copy (no
+// Hebrew glyphs); numerals + the fixed English wordmark only.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// JetBrains Mono — Latin-only telemetry voice for uppercase micro-labels
+// (SETS, REPS, SPEED, viewport readouts). Instrument/precision feel, RTL-safe.
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
   display: "swap",
 });
 
@@ -36,14 +55,21 @@ export default function RootLayout({
     <html
       lang="en"
       dir="ltr"
-      className={`${heebo.variable} h-full antialiased`}
+      className={`${heebo.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <LanguageProvider>
-          <AuthProvider>{children}</AuthProvider>
-          <Toaster richColors position="top-center" />
-        </LanguageProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <LanguageProvider>
+            <AuthProvider>{children}</AuthProvider>
+            <Toaster richColors position="top-center" />
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

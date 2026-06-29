@@ -33,6 +33,8 @@ export const dict = {
     he: "יצירת החדר נכשלה. בדקו את הרשאות ה-Database/Firestore (ראו SETUP.md).",
   },
   copyPin: { en: "Copy PIN code", he: "העתקת קוד PIN" },
+  lightMode: { en: "Light mode", he: "מצב בהיר" },
+  darkMode: { en: "Dark mode", he: "מצב כהה" },
   headsetConnected: { en: "Headset connected", he: "משקפת מחוברת" },
   disconnected: { en: "Disconnected", he: "מנותק" },
   livePreviewTag: { en: "Live preview — what the patient sees", he: "תצוגה חיה — מה שהמטופל רואה" },

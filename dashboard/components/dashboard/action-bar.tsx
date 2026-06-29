@@ -20,15 +20,15 @@ export function ActionBar({ running, endSetDisabled, onTogglePlay, onEndSet }: A
   const setInProgress = !endSetDisabled;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-card/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-elevated-lg backdrop-blur-md">
-      <div className="mx-auto flex max-w-3xl gap-2.5">
+    <div className="glass fixed inset-x-0 bottom-0 z-30 rounded-none border-x-0 border-b-0 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-elevated-lg">
+      <div className="mx-auto flex max-w-3xl gap-2.5 lg:max-w-6xl lg:px-2">
         <Button
           type="button"
           onClick={setInProgress ? onEndSet : onTogglePlay}
           className={`h-14 flex-1 gap-2 text-base font-bold text-white shadow-lg transition-transform active:scale-[0.98] ${
             setInProgress
               ? "bg-gradient-to-b from-primary to-primary/90 shadow-primary/25 hover:from-primary/90 hover:to-primary/80"
-              : "bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-emerald-600/25 hover:from-emerald-500/90 hover:to-emerald-600/90"
+              : "bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-emerald-600/25 hover:from-emerald-500/90 hover:to-emerald-600/90 animate-signal-pulse"
           }`}
         >
           {setInProgress ? <CheckCircle2 className="size-5" /> : <Play className="size-5" />}
