@@ -27,7 +27,7 @@ import { PresetsSection } from "@/components/dashboard/presets-section";
 import { ActionBar } from "@/components/dashboard/action-bar";
 
 const SECTION_CLASS =
-  "glass rounded-2xl px-4 transition-all hover:-translate-y-0.5 hover:shadow-elevated-lg lg:self-start";
+  "glass rounded-2xl px-4 transition-all hover:-translate-y-0.5 hover:shadow-elevated-lg lg:mb-3 lg:break-inside-avoid";
 const TRIGGER_CLASS = "text-[14px] font-bold hover:no-underline";
 
 export default function DashboardPage() {
@@ -112,7 +112,7 @@ export default function DashboardPage() {
             <Accordion
               type="multiple"
               defaultValue={["motion", "channels", "interweave", "ambiance", "presets"]}
-              className="space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0"
+              className="space-y-3 lg:block lg:columns-2 lg:gap-3 lg:space-y-0"
             >
               <AccordionItem value="motion" className={SECTION_CLASS}>
                 <AccordionTrigger className={TRIGGER_CLASS}>
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="ambiance" className={`${SECTION_CLASS} lg:col-span-2`}>
+              <AccordionItem value="ambiance" className={SECTION_CLASS}>
                 <AccordionTrigger className={TRIGGER_CLASS}>
                   <SectionTrigger icon={Palette} label={t("sectionAmbiance")} />
                 </AccordionTrigger>
