@@ -16,6 +16,7 @@ import { ConnectionBadge } from "@/components/dashboard/connection-badge";
 import { PinBadge } from "@/components/dashboard/pin-badge";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { InstallAppButton } from "@/components/install-app-button";
 import { SectionTrigger } from "@/components/dashboard/section-trigger";
 import { LivePreview } from "@/components/dashboard/live-preview";
 import { SessionHero } from "@/components/dashboard/session-hero";
@@ -77,6 +78,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <ConnectionBadge connected={panel.connected} />
           {pin && <PinBadge pin={pin} />}
+          <InstallAppButton />
           <ThemeToggle />
           <LanguageToggle />
           <span className="h-5 w-px bg-border" />

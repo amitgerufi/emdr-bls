@@ -8,6 +8,27 @@ export const dict = {
   signOut: { en: "Sign out", he: "התנתקות" },
   loading: { en: "Loading…", he: "טוען…" },
 
+  // Install as app
+  installApp: { en: "Install app", he: "התקנת אפליקציה" },
+  installAppTitle: { en: "Install EMDR BLS", he: "התקנת EMDR BLS" },
+  installIOSHint: {
+    en: 'Tap the Share icon, then "Add to Home Screen".',
+    he: 'הקש/י על כפתור השיתוף, ואז על "הוספה למסך הבית".',
+  },
+  installAndroidHint: {
+    en: 'Open the browser menu and choose "Install app" or "Add to Home screen".',
+    he: 'פתח/י את תפריט הדפדפן ובחר/י "התקנת אפליקציה" או "הוספה למסך הבית".',
+  },
+  installDesktopHint: {
+    en: "Look for the install icon in your browser's address bar.",
+    he: "חפש/י את סמל ההתקנה בשורת הכתובת של הדפדפן.",
+  },
+  installStarted: { en: "Installing…", he: "מתקין/ה…" },
+  alreadyInstalled: {
+    en: "Already installed — you're using the app version.",
+    he: "כבר מותקן — את/ה משתמש/ת בגרסת האפליקציה.",
+  },
+
   // Login
   welcome: { en: "Welcome", he: "ברוך/ה הבא/ה" },
   loginSubtitle: {
