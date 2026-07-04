@@ -47,7 +47,7 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
     if (!canvas || !ctx) return;
 
     let phase = 0;
-    let drawnSinX = 0; // ערך sin מצויר בפועל — נע ל-0 בעדינות כשהתנועה לא רצה
+    let drawnSinX = 0; // actual drawn sin value — eases to 0 gently when motion isn't running
     let drawnSinY = 0;
     let last = performance.now();
     let raf = 0;

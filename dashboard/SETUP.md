@@ -106,7 +106,7 @@ npm run dev
 ```
 
 Open http://localhost:3000 — you'll be redirected to `/login`. Click
-**התחברות עם Google**, choose your account, and you'll land on `/dashboard`
+**Sign in with Google**, choose your account, and you'll land on `/dashboard`
 with your room's PIN and the full control panel.
 
 ## What's here so far
