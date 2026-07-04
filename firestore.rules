@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// EMDR BLS — Cloud Firestore security rules.
+// BLS-VR — Cloud Firestore security rules.
 // Firestore holds only therapist-side data: the therapist profile
 // (therapists/{uid} = { pin, createdAt }) and their saved presets
 // (therapists/{uid}/presets/{presetId}). The patient (Quest) client never

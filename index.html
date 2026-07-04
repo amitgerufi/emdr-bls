@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EMDR BLS</title>
+  <title>BLS-VR</title>
   <style>
     body { margin: 0; background: #000; overflow: hidden; }
     #info {
@@ -54,11 +54,11 @@
   </style>
 </head>
 <body>
-  <div id="info">EMDR BLS | Press "Enter VR"</div>
+  <div id="info">BLS-VR | Press "Enter VR"</div>
 
   <div id="pinScreen">
     <div id="pinCard">
-      <h1>EMDR BLS</h1>
+      <h1>BLS-VR</h1>
       <p>Enter the 4-digit PIN shown on your therapist's dashboard to connect to the room.</p>
       <input id="pinInput" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
       <button id="pinSubmit" type="button">Connect</button>
@@ -477,7 +477,7 @@
     //  PIN entry — resolves a PIN code to a roomId via pins/{pin}, and remembers it in localStorage
     //  so the headset connects automatically to the same room next time (same therapist, same headset).
     // ══════════════════════════════════════════
-    const ROOM_STORAGE_KEY = 'emdrBlsRoomId';
+    const ROOM_STORAGE_KEY = 'blsVrRoomId';
 
     const pinScreen   = document.getElementById('pinScreen');
     const pinInput    = document.getElementById('pinInput');

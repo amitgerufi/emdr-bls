@@ -10,7 +10,7 @@ export const dict = {
 
   // Install as app
   installApp: { en: "Install app", he: "התקנת אפליקציה" },
-  installAppTitle: { en: "Install EMDR BLS", he: "התקנת EMDR BLS" },
+  installAppTitle: { en: "Install BLS-VR", he: "התקנת BLS-VR" },
   installIOSHint: {
     en: 'Tap the Share icon, then "Add to Home Screen".',
     he: 'הקש/י על כפתור השיתוף, ואז על "הוספה למסך הבית".',
@@ -32,8 +32,8 @@ export const dict = {
   // Login
   welcome: { en: "Welcome", he: "ברוך/ה הבא/ה" },
   loginSubtitle: {
-    en: "Sign in to run live EMDR sessions and control the patient's bilateral stimulation.",
-    he: "התחבר/י כדי לנהל סשן EMDR בזמן אמת ולשלוט בגירוי הבילטרלי של המטופל/ת.",
+    en: "Sign in to run live BLS sessions and control the patient's bilateral stimulation.",
+    he: "התחבר/י כדי לנהל סשן BLS בזמן אמת ולשלוט בגירוי הבילטרלי של המטופל/ת.",
   },
   signingIn: { en: "Signing in…", he: "מתחבר/ת…" },
   signInWithGoogle: { en: "Sign in with Google", he: "התחברות עם Google" },

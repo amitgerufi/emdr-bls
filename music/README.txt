@@ -1,4 +1,4 @@
-Music folder — EMDR BLS
+Music folder — BLS-VR
 ==========================
 
 How to add new background music:

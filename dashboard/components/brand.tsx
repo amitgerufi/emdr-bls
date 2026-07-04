@@ -17,7 +17,7 @@ export function Brand({ className, compact = false }: { className?: string; comp
             compact ? "text-[15px]" : "text-lg",
           )}
         >
-          EMDR BLS
+          BLS-VR
         </span>
         {!compact && (
           <span className="text-xs font-medium tracking-wide text-muted-foreground">{t("appTagline")}</span>
