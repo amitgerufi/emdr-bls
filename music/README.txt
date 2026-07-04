@@ -1,19 +1,19 @@
-תיקיית מוזיקה — EMDR BLS
+Music folder — EMDR BLS
 ==========================
 
-איך מוסיפים מוזיקת רקע חדשה:
+How to add new background music:
 
-1. קח קובץ מוזיקה בפורמט MP3 (רגוע, ללא הפרעות).
-2. שים אותו כאן, בתיקייה הזו (music) — אפשר עם כל שם באנגלית.
-3. פתח את dashboard.html והוסף שורה לרשימת MUSIC (חפש "const MUSIC")
-   עם שם הקובץ (בלי .mp3), תווית בעברית, ומשך. לדוגמה:
-      { id: 'my-track', label: 'הרצועה שלי', dur: '3:20' },
-4. העלה את הקובץ ואת השינוי ל-GitHub.
+1. Get a music file in MP3 format (calm, non-distracting).
+2. Put it here, in this folder (music) — any English file name works.
+3. Open dashboard/lib/constants.ts and add a line to the MUSIC list
+   with the file name (without .mp3), a label, and a duration. For example:
+      { id: 'my-track', label: { en: 'My track', he: 'הרצועה שלי' }, dur: '3:20' },
+4. Upload the file and the change to GitHub.
 
-המוזיקה מתנגנת בלולאה ברקע. רצועות ארוכות מתחילות מיד —
-הנגן משדר אותן תוך כדי נגינה (streaming), לא מוריד הכל מראש.
+Music plays on a loop in the background. Long tracks start immediately —
+the player streams them while playing, not downloading everything upfront.
 
-הערות:
-- אם כפתור מצביע על קובץ שלא קיים — פשוט לא תתנגן מוזיקה (ללא שגיאה).
-- ווליום המוזיקה נשלט מהדשבורד.
-- שים לב לזכויות יוצרים — השתמש במוזיקה שמותר לך להשתמש בה.
+Notes:
+- If a button points to a file that doesn't exist, music simply won't play (no error).
+- Music volume is controlled from the dashboard.
+- Mind copyright — use music you're allowed to use.

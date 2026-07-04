@@ -104,8 +104,8 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
         drawnSinX = Math.sin(phase);
         drawnSinY = Math.sin(phase * 2);
       } else {
-        // עצירה / סיום סט — מחזירים את הכדור באיטיות למרכז, תואם ל-index.html
-        const kReturn = 1 - Math.pow(0.3, dt); // ~2.5 שניות לחזרה מלאה
+        // stop / end of set — slowly return the ball to center, matches index.html
+        const kReturn = 1 - Math.pow(0.3, dt); // ~2.5 seconds for a full return
         drawnSinX = drawnSinX * (1 - kReturn);
         drawnSinY = drawnSinY * (1 - kReturn);
       }

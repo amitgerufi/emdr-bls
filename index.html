@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,12 +13,12 @@
       pointer-events: none;
     }
 
-    /* מסך הזדהות PIN — חוסם את החוויה עד שמתחברים לחדר של מטפל/ת ספציפי/ת */
+    /* PIN entry screen — blocks the experience until connected to a specific therapist's room */
     #pinScreen {
       position: fixed; inset: 0; z-index: 50;
       display: flex; align-items: center; justify-content: center;
       background: #0a1622;
-      font-family: Arial, sans-serif; direction: rtl;
+      font-family: Arial, sans-serif; direction: ltr;
     }
     #pinScreen.hidden { display: none; }
     #pinCard {
@@ -44,7 +44,7 @@
     #pinSubmit:disabled { opacity: 0.5; cursor: default; }
     #pinError { margin-top: 12px; font-size: 13px; color: #f87171; min-height: 16px; }
 
-    /* קישור עדין להחלפת חדר (גלוי רק לאחר התחברות) */
+    /* Subtle link to change room (visible only after connecting) */
     #changeRoom {
       position: fixed; bottom: 10px; inset-inline-end: 12px; z-index: 40;
       font-family: Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.35);
@@ -54,18 +54,18 @@
   </style>
 </head>
 <body>
-  <div id="info">EMDR BLS | לחץ "Enter VR"</div>
+  <div id="info">EMDR BLS | Press "Enter VR"</div>
 
   <div id="pinScreen">
     <div id="pinCard">
       <h1>EMDR BLS</h1>
-      <p>הזן/י את קוד ה-PIN בן 4 הספרות המוצג בדשבורד של המטפל/ת כדי להתחבר לחדר.</p>
+      <p>Enter the 4-digit PIN shown on your therapist's dashboard to connect to the room.</p>
       <input id="pinInput" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-      <button id="pinSubmit" type="button">התחברות</button>
+      <button id="pinSubmit" type="button">Connect</button>
       <div id="pinError"></div>
     </div>
   </div>
-  <div id="changeRoom" class="hidden">החלפת קוד PIN</div>
+  <div id="changeRoom" class="hidden">Change PIN code</div>
 
   <script type="importmap">
   {
@@ -81,37 +81,37 @@
     import { VRButton } from 'three/addons/webxr/VRButton.js';
 
     // ══════════════════════════════════════════
-    //  Firebase — כתובת בסיס הנתונים
+    //  Firebase — database base URL
     // ══════════════════════════════════════════
     const DB = 'https://emdr-bls-b9cd1-default-rtdb.firebaseio.com';
 
     // ══════════════════════════════════════════
-    //  מצב מרכזי — מתעדכן מהדשבורד דרך Firebase
+    //  Central state — updated from the dashboard via Firebase
     // ══════════════════════════════════════════
     const S = {
       running:    true,
       speed:      5,            // 1–9
-      swing:      5,            // 1–9 רוחב תנועה
-      height:     0,            // -5 עד +5
+      swing:      5,            // 1–9 movement width
+      height:     0,            // -5 to +5
       size:       5,            // 1–9
       color:      '#5599ff',
       pattern:    'horizontal', // 'horizontal' | 'figure8'
       visual:     true,
       audio:      true,
-      audioVolume: 5,           // 1–9 עוצמת צליל ה-BLS (טק)
+      audioVolume: 5,           // 1–9 volume of the BLS "tick" sound
       haptic:     true,
-      hapticStrength: 5,        // 1–9 עוצמת הרטט
-      env:        'sky',        // סביבת רקע
+      hapticStrength: 5,        // 1–9 vibration strength
+      env:        'sky',        // background environment
       music:      'off',        // 'off' | '1' | '2' | '3'
       musicVolume: 5,           // 0–9
       hapticOnly: false,
-      iwText:     '',           // טקסט שזירה להצגה למטופל ('' = ללא)
-      iwSeq:      0,            // משתנה בכל שליחה/הסתרה → מפעיל פייד-אין/אאוט
-      sessionSeq: 0,            // משתנה באיפוס → מאפס פאזה/חזרות
-      setSeq:     0,            // משתנה בכל פליי → מאפס פאזה/חזרות (סט חדש)
+      iwText:     '',           // interweave text to show the patient ('' = none)
+      iwSeq:      0,            // bumped on every send/hide → triggers fade in/out
+      sessionSeq: 0,            // bumped on reset → resets phase/reps
+      setSeq:     0,            // bumped on every play → resets phase/reps (new set)
     };
 
-    // המרת סקאלות לערכים פיזיקליים
+    // converting scale values to physical values
     const toSpeed  = l => 0.2  + (l - 1) * 0.150;
     const toSwing  = l => 0.30 + (l - 1) * 0.175;
     const toHeight = h => h * 0.10;
@@ -127,7 +127,7 @@
     renderer.setSize(innerWidth, innerHeight);
     renderer.setPixelRatio(devicePixelRatio);
     renderer.xr.enabled = true;
-    renderer.xr.setReferenceSpaceType('local'); // 0 = גובה עיניים
+    renderer.xr.setReferenceSpaceType('local'); // 0 = eye height
     document.body.appendChild(renderer.domElement);
     document.body.appendChild(VRButton.createButton(renderer));
 
@@ -137,18 +137,18 @@
     scene.add(sun);
 
     // ══════════════════════════════════════════
-    //  סביבת רקע — ספֵרה הפוכה ענקית עם מעבר-גוון
-    //  (מחולל בקוד, ללא קבצים כבדים)
+    //  Background environment — giant inverted sphere with a gradient
+    //  (generated in code, no heavy files)
     // ══════════════════════════════════════════
     const ENVIRONMENTS = {
-      room:    { top: '#d9c9b0', bottom: '#8a7355', clear: 0xb9a685 }, // חדר רגוע
-      nature:  { top: '#9fd4e8', bottom: '#5a8f4e', clear: 0x86b97a }, // נוף טבע
-      beach:   { top: '#aee4f0', bottom: '#e8d6a8', clear: 0xbfe0e6 }, // חוף ים
-      sky:     { top: '#3a7bd5', bottom: '#bfe3ff', clear: 0x87CEEB }, // שמיים
-      neutral: { top: '#5a5a66', bottom: '#23232b', clear: 0x33333b }, // ניטרלי
+      room:    { top: '#d9c9b0', bottom: '#8a7355', clear: 0xb9a685 }, // calm room
+      nature:  { top: '#9fd4e8', bottom: '#5a8f4e', clear: 0x86b97a }, // nature scenery
+      beach:   { top: '#aee4f0', bottom: '#e8d6a8', clear: 0xbfe0e6 }, // beach
+      sky:     { top: '#3a7bd5', bottom: '#bfe3ff', clear: 0x87CEEB }, // sky
+      neutral: { top: '#5a5a66', bottom: '#23232b', clear: 0x33333b }, // neutral
     };
 
-    // יוצר טקסטורת מעבר-גוון אנכי על canvas
+    // creates a vertical gradient texture on a canvas
     function makeGradientTexture(top, bottom) {
       const c = document.createElement('canvas');
       c.width = 16; c.height = 256;
@@ -163,18 +163,18 @@
       return tex;
     }
 
-    // ספֵרה הפוכה שעוטפת את המטופל (BackSide = רואים אותה מבפנים)
+    // inverted sphere wrapping the patient (BackSide = seen from inside)
     const skyMat  = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
     const skyDome = new THREE.Mesh(new THREE.SphereGeometry(30, 64, 32), skyMat);
     scene.add(skyDome);
 
-    // רקעי תמונה 360 — נטענים מתיקיית backgrounds/ (כל ערך env שאינו גוון)
+    // 360 photo backgrounds — loaded from the backgrounds/ folder (any env value that isn't a color wash)
     const texLoader  = new THREE.TextureLoader();
-    const photoCache = {};       // id → THREE.Texture (נטען פעם אחת בלבד)
-    let   currentEnv = null;     // הרקע המוצג כעת — מונע טעינה חוזרת בכל עדכון
+    const photoCache = {};       // id → THREE.Texture (loaded only once)
+    let   currentEnv = null;     // the currently shown background — prevents reloading on every update
 
-    // כיוונון התפר של תמונות הרקע (360°) כך שייפול מאחורי הראש.
-    // 0.25 הזיז את התפר לממש מול העיניים (חצי סיבוב לא נכון) → +0.5 נוסף (0.75) מביא אותו לצד הנגדי המדויק.
+    // Tuning the seam of the 360° background photos so it falls behind the head.
+    // 0.25 moved the seam to right in front of the eyes (wrong half-turn) → an extra +0.5 (0.75) brings it to the exact opposite side.
     const PHOTO_SEAM_OFFSET = 0.75;
 
     function setGradient(e) {
@@ -185,25 +185,25 @@
     }
 
     function applyEnv(name) {
-      if (name === currentEnv) return;     // אין שינוי אמיתי → לא טוענים שוב
+      if (name === currentEnv) return;     // no real change → don't reload
       currentEnv = name;
-      // גוון מחולל-בקוד
+      // code-generated color wash
       if (ENVIRONMENTS[name]) { setGradient(ENVIRONMENTS[name]); return; }
-      // רקע תמונה — מהמטמון אם כבר נטען
+      // photo background — from cache if already loaded
       if (photoCache[name]) {
         skyMat.map = photoCache[name]; skyMat.needsUpdate = true;
         renderer.setClearColor(0x000000);
         return;
       }
-      // טעינה ראשונה (אסינכרונית)
+      // first load (async)
       texLoader.load(`backgrounds/${name}.jpg`, tex => {
         tex.colorSpace = THREE.SRGBColorSpace;
-        // התפר של התמונות (360°) נמצא בגלגול לא-מסונכרן עם כיוון המבט הקדמי —
-        // מסובבים את הטקסטורה אופקית כדי שהתפר ייפול מאחורי הראש ולא בשדה הראייה.
+        // The seam in the 360° photos sits at a rotation not synced with the forward view direction —
+        // we rotate the texture horizontally so the seam falls behind the head, not in the field of view.
         tex.wrapS = THREE.RepeatWrapping;
         tex.offset.x = PHOTO_SEAM_OFFSET;
         photoCache[name] = tex;
-        if (currentEnv === name) {          // עדיין הרקע הנבחר?
+        if (currentEnv === name) {          // still the selected background?
           skyMat.map = tex; skyMat.needsUpdate = true;
           renderer.setClearColor(0x000000);
         }
@@ -212,7 +212,7 @@
     applyEnv(S.env);
 
     // ══════════════════════════════════════════
-    //  כדור — ערכי יעד + מעבר חלק (lerp)
+    //  Ball — target values + smooth transition (lerp)
     // ══════════════════════════════════════════
     const sphere = new THREE.Mesh(
       new THREE.SphereGeometry(0.15, 32, 32),
@@ -222,7 +222,7 @@
     sphere.scale.setScalar(toScale(S.size));
     scene.add(sphere);
 
-    // ערכי יעד שאליהם הכדור "זוחל" בעדינות
+    // target values the ball gently "crawls" toward
     const target = {
       scale:  toScale(S.size),
       posY:   toHeight(S.height),
@@ -230,7 +230,7 @@
     };
 
     // ══════════════════════════════════════════
-    //  אודיו — "טק" קצר בכל קצה
+    //  Audio — a short "tick" at each edge
     // ══════════════════════════════════════════
     let audioCtx = null;
     function initAudio() {
@@ -239,8 +239,8 @@
     }
     function playTick(side) {
       if (!audioCtx || !S.running || !S.audio) return;
-      const peak = (S.audioVolume / 9) * 0.9;   // 1–9 → עוצמה
-      if (peak < 0.005) return;                 // ווליום 0 → שקט
+      const peak = (S.audioVolume / 9) * 0.9;   // 1–9 → volume
+      if (peak < 0.005) return;                 // volume 0 → silent
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       const panner = new StereoPannerNode(audioCtx, { pan: side === 'right' ? 1 : -1 });
@@ -255,31 +255,31 @@
     }
 
     // ══════════════════════════════════════════
-    //  מוזיקת רקע — קובץ מתיקיית music/
+    //  Background music — a file from the music/ folder
     // ══════════════════════════════════════════
-    let musicEl = null;     // ה-<audio> הנוכחי
-    let musicId = 'off';    // איזו רצועה נטענה
+    let musicEl = null;     // the current <audio> element
+    let musicId = 'off';    // which track is loaded
 
     function applyMusic() {
-      // עצירה אם כובה או שונתה הבחירה
+      // stop if turned off or the selection changed
       if (S.music === 'off' || S.music !== musicId) {
         if (musicEl) { musicEl.pause(); musicEl = null; }
         musicId = 'off';
       }
-      // ווליום (0–9 → 0.0–1.0)
+      // volume (0–9 → 0.0–1.0)
       const vol = Math.max(0, Math.min(1, S.musicVolume / 9));
-      // טעינה והפעלה של רצועה נבחרת
+      // load and play the selected track
       if (S.music !== 'off' && S.music !== musicId) {
         musicEl = new Audio(`music/${S.music}.mp3`);
         musicEl.loop = true;
         musicEl.volume = vol;
-        musicEl.play().catch(() => {}); // קובץ חסר / חסימת autoplay → מתעלמים
+        musicEl.play().catch(() => {}); // missing file / autoplay blocked → ignored
         musicId = S.music;
       }
       if (musicEl) musicEl.volume = vol;
     }
 
-    // הפעלת אודיו דורשת תנועת משתמש
+    // resuming audio requires a user gesture
     function resumeAudio() {
       if (!audioCtx) initAudio();
       else if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -289,7 +289,7 @@
     renderer.xr.addEventListener('sessionstart', resumeAudio);
 
     // ══════════════════════════════════════════
-    //  רטט מתחלף
+    //  Alternating vibration
     // ══════════════════════════════════════════
     function pulseHaptic(side) {
       if (!S.haptic) return;
@@ -304,20 +304,20 @@
     }
 
     // ══════════════════════════════════════════
-    //  שזירות — לוח טקסט צף (CanvasTexture)
-    //  נכנס בפייד-אין, מוחזק לפי אורך הטקסט, יוצא בפייד-אאוט.
-    //  ממוקם מעל מסלול הכדור כדי לא להסתיר אותו.
+    //  Interweaves — a floating text panel (CanvasTexture)
+    //  Fades in, holds for a duration based on text length, fades out.
+    //  Positioned above the ball's path so it doesn't hide it.
     // ══════════════════════════════════════════
     const iw = {
-      seq: 0,          // ה-iwSeq האחרון שטופל
-      synced: false,   // האם סונכרן מול המצב הראשון מ-Firebase (מונע הקפצת טקסט ישן בריענון)
-      opacity: 0,      // שקיפות נוכחית (מונפשת)
-      target: 0,       // יעד השקיפות (0 או 1)
-      hideAt: 0,       // חותמת-זמן (ms) להיעלמות אוטומטית; 0 = ללא
+      seq: 0,          // the last iwSeq that was handled
+      synced: false,   // whether synced against the first state from Firebase (prevents old text flashing on refresh)
+      opacity: 0,      // current opacity (animated)
+      target: 0,       // opacity target (0 or 1)
+      hideAt: 0,       // timestamp (ms) for auto-hide; 0 = none
       mesh: null, canvas: null, ctx: null, tex: null,
     };
 
-    // מלבן מעוגל-פינות (עם נפילה חיננית לדפדפנים ישנים)
+    // rounded-corner rectangle (with a graceful fallback for older browsers)
     function roundRect(ctx, x, y, w, h, r) {
       if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
       ctx.beginPath();
@@ -336,10 +336,10 @@
       tex.colorSpace = THREE.SRGBColorSpace;
       const mat = new THREE.MeshBasicMaterial({
         map: tex, transparent: true, opacity: 0,
-        depthWrite: false, depthTest: false, // תמיד נקרא מעל הרקע
+        depthWrite: false, depthTest: false, // always reads above the background
       });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), mat);
-      mesh.position.set(0, 0.78, -2.0);  // מעל הכדור (y≈0, z=-1.5) ומעט מאחוריו
+      mesh.position.set(0, 0.78, -2.0);  // above the ball (y≈0, z=-1.5) and slightly behind it
       mesh.renderOrder = 10;
       mesh.visible = false;
       scene.add(mesh);
@@ -347,17 +347,21 @@
     }
     buildInterweave();
 
-    // מצייר את הטקסט על ה-canvas (גלישת שורות + פאנל רקע שקוף-למחצה)
+    // draws the text on the canvas (line wrapping + a semi-transparent background panel)
     function drawInterweaveText(text) {
       const ctx = iw.ctx, W = iw.canvas.width, H = iw.canvas.height;
       ctx.clearRect(0, 0, W, H);
       const fontSize = 64;
       ctx.font = `700 ${fontSize}px Arial, sans-serif`;
+      // Direction stays RTL regardless of UI language: the therapist can type and
+      // send free-text interweaves in Hebrew during a live session, and this needs
+      // to keep rendering correctly. Centered alignment below keeps English text
+      // unaffected either way.
       ctx.direction = 'rtl';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // גלישת שורות לפי רוחב מרבי
+      // line wrapping by max width
       const maxWidth = W - 140;
       const words = text.split(/\s+/);
       const lines = [];
@@ -374,7 +378,7 @@
       let maxLineW = 0;
       lines.forEach(l => maxLineW = Math.max(maxLineW, ctx.measureText(l).width));
 
-      // פאנל רקע שקוף-למחצה בגודל הטקסט
+      // semi-transparent background panel sized to the text
       const padX = 64, padY = 44;
       const panelW = Math.min(W, maxLineW + padX * 2);
       const panelH = blockH + padY * 2;
@@ -382,7 +386,7 @@
       roundRect(ctx, (W - panelW) / 2, (H - panelH) / 2, panelW, panelH, 40);
       ctx.fill();
 
-      // הטקסט עצמו — לבן עם צל לקריאוּת מול כל רקע
+      // the text itself — white with a shadow for readability against any background
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = 'rgba(0,0,0,0.85)';
       ctx.shadowBlur = 10;
@@ -393,9 +397,9 @@
       iw.tex.needsUpdate = true;
     }
 
-    // מגיב לשינוי iwSeq: טקסט חדש → הצגה; טקסט ריק → הסתרה
+    // reacts to an iwSeq change: new text → show; empty text → hide
     function applyInterweave() {
-      if (!iw.synced) { iw.synced = true; iw.seq = S.iwSeq; return; } // ריענון מאמצע סשן לא מקפיץ טקסט ישן
+      if (!iw.synced) { iw.synced = true; iw.seq = S.iwSeq; return; } // a mid-session refresh doesn't flash old text
       if (S.iwSeq === iw.seq) return;
       iw.seq = S.iwSeq;
       const txt = (S.iwText || '').trim();
@@ -403,30 +407,30 @@
         drawInterweaveText(txt);
         iw.mesh.visible = true;
         iw.target = 1;
-        // משך החזקה גדל עם אורך הטקסט (זמן קריאה), בתוספת פייד-אין
+        // hold duration grows with text length (reading time), plus the fade-in
         const hold = Math.min(14000, 3500 + txt.length * 130);
         iw.hideAt = performance.now() + 1200 + hold;
       } else {
-        iw.target = 0;     // פקודת הסתרה ידנית
+        iw.target = 0;     // manual hide command
         iw.hideAt = 0;
       }
     }
 
     // ══════════════════════════════════════════
-    //  Firebase ← מאזין לפקודות מהדשבורד
-    //  נתיב ספציפי-לחדר (sessions/{roomId}) — roomId מתקבל ממסך ה-PIN למטה.
-    //  הארכיטקטורה הישנה השתמשה בנתיב גלובלי יחיד (emdr.json); כעת כל מטפל/ת
-    //  מקבל/ת חדר נפרד, בדיוק כמו שהדשבורד החדש כותב אליו.
+    //  Firebase ← listens for commands from the dashboard
+    //  Room-specific path (sessions/{roomId}) — roomId comes from the PIN screen below.
+    //  The old architecture used a single global path (emdr.json); now every therapist
+    //  gets a separate room, exactly like the new dashboard writes to.
     // ══════════════════════════════════════════
     let lastSessionSeq = S.sessionSeq;
     let lastSetSeq = S.setSeq;
     let roomId = null;
     let fbStream = null;
     let statusTimer = null;
-    let phase = 0;   // פאזת התנועה — צוברת לאורך זמן (פתרון הקפיצה)
-    let reps  = 0;   // מונה חזרות (מחזורים מלאים) — מוצב כאן (לא בלולאת האנימציה) כי
-                     // reportStatus() עליו נסמך עלול לרוץ באופן סינכרוני כבר מההתחברות
-                     // האוטומטית (localStorage) למעלה, לפני שהקוד מגיע ללולאת האנימציה.
+    let phase = 0;   // motion phase — accumulates over time (fixes the jump bug)
+    let reps  = 0;   // rep counter (full cycles) — placed here (not in the animation loop) because
+                     // reportStatus(), which depends on it, may run synchronously already from the
+                     // automatic (localStorage) connection above, before the code reaches the animation loop.
 
     function connectFirebase(id) {
       if (fbStream) fbStream.close();
@@ -437,10 +441,10 @@
         Object.assign(S, data);
         applyAll();
       });
-      fbStream.addEventListener('error', () => { /* יתחבר מחדש אוטומטית */ });
+      fbStream.addEventListener('error', () => { /* reconnects automatically */ });
     }
 
-    // מחיל את כל הפרמטרים אחרי עדכון מהדשבורד
+    // applies all parameters after an update from the dashboard
     function applyAll() {
       target.scale = toScale(S.size);
       target.posY  = toHeight(S.height);
@@ -449,7 +453,7 @@
       applyEnv(S.env);
       applyMusic();
       applyInterweave();
-      // איפוס סשן (כפתור איפוס) או תחילת סט חדש (פליי) → מאפס פאזה וחזרות
+      // session reset (reset button) or a new set starting (play) → resets phase and reps
       if (S.sessionSeq !== lastSessionSeq || S.setSeq !== lastSetSeq) {
         lastSessionSeq = S.sessionSeq;
         lastSetSeq = S.setSeq;
@@ -458,7 +462,7 @@
     }
 
     // ══════════════════════════════════════════
-    //  Firebase → דיווח סטטוס (נוכחות + חזרות) — לפי roomId
+    //  Firebase → status reporting (presence + reps) — per roomId
     // ══════════════════════════════════════════
     function reportStatus() {
       if (!roomId) return;
@@ -470,8 +474,8 @@
     }
 
     // ══════════════════════════════════════════
-    //  הזדהות PIN — פותר קוד PIN ל-roomId דרך pins/{pin}, ונזכר ב-localStorage
-    //  כדי שהקסדה תתחבר אוטומטית לאותו חדר בפעמים הבאות (אותו מטפל/ת, אותה קסדה).
+    //  PIN entry — resolves a PIN code to a roomId via pins/{pin}, and remembers it in localStorage
+    //  so the headset connects automatically to the same room next time (same therapist, same headset).
     // ══════════════════════════════════════════
     const ROOM_STORAGE_KEY = 'emdrBlsRoomId';
 
@@ -489,18 +493,18 @@
       connectFirebase(id);
       reportStatus();
       if (statusTimer) clearInterval(statusTimer);
-      statusTimer = setInterval(reportStatus, 1000); // heartbeat כל שנייה
+      statusTimer = setInterval(reportStatus, 1000); // heartbeat every second
     }
 
     async function resolveRoomId(pin) {
       const res = await fetch(`${DB}/pins/${pin}.json`);
-      return res.json(); // roomId (string) או null אם הקוד לא קיים
+      return res.json(); // roomId (string) or null if the code doesn't exist
     }
 
     async function submitPin() {
       const pin = pinInput.value.trim();
       if (!/^\d{4}$/.test(pin)) {
-        pinErrorEl.textContent = 'יש להזין קוד בן 4 ספרות.';
+        pinErrorEl.textContent = 'Please enter a 4-digit code.';
         return;
       }
       pinSubmit.disabled = true;
@@ -508,12 +512,12 @@
       try {
         const id = await resolveRoomId(pin);
         if (!id) {
-          pinErrorEl.textContent = 'קוד לא נמצא. בדוק/י מול המטפל/ת ונסה/י שוב.';
+          pinErrorEl.textContent = 'Code not found. Check with your therapist and try again.';
           return;
         }
         startSession(id);
       } catch {
-        pinErrorEl.textContent = 'תקלת תקשורת. נסה/י שוב.';
+        pinErrorEl.textContent = 'Connection error. Try again.';
       } finally {
         pinSubmit.disabled = false;
       }
@@ -529,13 +533,13 @@
       location.reload();
     });
 
-    // חיבור אוטומטי אם כבר נשמר roomId ממפגש קודם באותה קסדה
+    // auto-connect if a roomId was already saved from a previous session on this headset
     const savedRoomId = localStorage.getItem(ROOM_STORAGE_KEY);
     if (savedRoomId) startSession(savedRoomId);
     else pinInput.focus();
 
     // ══════════════════════════════════════════
-    //  קונטרולרים (בקאפ ללא דשבורד)
+    //  Controllers (backup without the dashboard)
     // ══════════════════════════════════════════
     [renderer.xr.getController(0), renderer.xr.getController(1)].forEach(ctrl => {
       ctrl.addEventListener('selectstart', () => { S.running = !S.running; });
@@ -543,7 +547,7 @@
     });
 
     // ══════════════════════════════════════════
-    //  לולאת אנימציה
+    //  Animation loop
     // ══════════════════════════════════════════
     const clock = new THREE.Clock();
     let prevA = false, prevB = false;
@@ -552,7 +556,7 @@
     renderer.setAnimationLoop(() => {
       const dt = clock.getDelta();
 
-      // כפתורי A/B — שינוי מהירות (בקאפ ללא דשבורד)
+      // A/B buttons — speed change (backup without the dashboard)
       const session = renderer.xr.getSession();
       if (session) {
         for (const src of session.inputSources) {
@@ -565,16 +569,16 @@
         }
       }
 
-      // מעבר חלק של גודל/גובה/צבע אל ערכי היעד
-      const k = 1 - Math.pow(0.001, dt); // lerp עצמאי-קצב-פריימים
+      // smooth transition of scale/height/color toward target values
+      const k = 1 - Math.pow(0.001, dt); // frame-rate-independent lerp
       sphere.scale.setScalar(THREE.MathUtils.lerp(sphere.scale.x, target.scale, k));
       sphere.position.y = THREE.MathUtils.lerp(sphere.position.y, target.posY, k);
       sphere.material.color.lerp(target.color, k);
 
-      // פייד חלק של לוח השזירה (כניסה/יציאה) — בלתי תלוי בתנועת הכדור
+      // smooth fade of the interweave panel (in/out) — independent of the ball's motion
       if (iw.mesh) {
         if (iw.hideAt && performance.now() >= iw.hideAt) { iw.target = 0; iw.hideAt = 0; }
-        const fadeK = 1 - Math.pow(0.06, dt);   // ~1.2ש' לפייד מלא
+        const fadeK = 1 - Math.pow(0.06, dt);   // ~1.2s for a full fade
         iw.opacity = THREE.MathUtils.lerp(iw.opacity, iw.target, fadeK);
         iw.mesh.material.opacity = iw.opacity;
         if (iw.target === 0 && iw.opacity < 0.01) iw.mesh.visible = false;
@@ -583,22 +587,22 @@
       if (S.running) {
         const swing = toSwing(S.swing);
 
-        // צבירת פאזה — שינוי מהירות משנה קצב, לא מיקום (אין קפיצה)
+        // phase accumulation — a speed change alters rate, not position (no jump)
         const prevPhase = phase;
         phase += dt * toSpeed(S.speed) * Math.PI;
 
-        // ספירת חזרות — כל מחזור מלא (2π) = חזרה אחת
+        // rep counting — every full cycle (2π) = one rep
         reps = Math.floor(phase / (Math.PI * 2));
 
-        // מיקום לפי תבנית התנועה
+        // position by movement pattern
         const x = Math.sin(phase) * swing;
         sphere.position.x = x;
         if (S.pattern === 'figure8') {
-          // שמינייה: תנודת Y בתדר כפול סביב הגובה הנוכחי
+          // figure-8: Y oscillation at double frequency around the current height
           sphere.position.y = target.posY + Math.sin(phase * 2) * (swing * 0.4);
         }
 
-        // טריגר אודיו + רטט בקצוות ה-X
+        // audio + vibration trigger at the X extremes
         const zone = swing * 0.80;
         if (x > zone && !hapticR) {
           hapticR = true; hapticL = false;
@@ -608,10 +612,10 @@
           pulseHaptic('left'); playTick('left');
         }
       } else {
-        // עצירה / סיום סט — מחזירים את הכדור באיטיות למרכז (X) במקום להשאיר אותו קפוא בצד
-        const kReturn = 1 - Math.pow(0.3, dt); // ~2.5 שניות לחזרה מלאה (איטי בכוונה)
+        // stop / end of set — slowly return the ball to center (X) instead of leaving it frozen off to the side
+        const kReturn = 1 - Math.pow(0.3, dt); // ~2.5 seconds for a full return (intentionally slow)
         sphere.position.x = THREE.MathUtils.lerp(sphere.position.x, 0, kReturn);
-        hapticR = false; hapticL = false; // הסט הבא יתחיל נקי מאזורי הטריגר
+        hapticR = false; hapticL = false; // the next set starts clean of the trigger zones
       }
 
       renderer.render(scene, camera);

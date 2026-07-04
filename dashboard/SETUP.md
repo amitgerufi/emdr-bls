@@ -136,7 +136,7 @@ a specific therapist's room instead of one global, shared session:
   to `/status/{roomId}` — replacing the POC's global `/emdr.json` and
   `/status.json` paths.
 - The resolved `roomId` is cached in `localStorage` so the same headset
-  reconnects automatically next time, with a small "החלפת קוד PIN" link to
+  reconnects automatically next time, with a small "Change PIN code" link to
   re-pair.
 - Requires the `sessions.$roomId.read: true` rule above — see the warning
   callout if you set up rules before this milestone landed.
