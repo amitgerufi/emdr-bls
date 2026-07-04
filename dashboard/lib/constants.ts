@@ -90,16 +90,16 @@ export function musicName(id: string, lang: Lang): string {
 
 // ── Interweave preset phrases (text shown to the patient) ───────────────────
 export const INTERWEAVES: Label[] = [
-  { en: "You are safe now", he: "את/ה בטוח/ה עכשיו" },
+  { en: "You are safe now", he: "עכשיו הכל בטוח" },
   { en: "It's over", he: "זה נגמר" },
   { en: "That belongs to the past", he: "זה שייך לעבר" },
-  { en: "You are here, in the present", he: "את/ה כאן, בהווה" },
+  { en: "You are here, in the present", he: "אנחנו כאן, בהווה" },
   { en: "You did the best you could", he: "עשית כמיטב יכולתך" },
   { en: "It's not your fault", he: "זאת לא אשמתך" },
-  { en: "You are not alone", he: "את/ה לא לבד" },
+  { en: "You are not alone", he: "אנחנו יחד כאן" },
   { en: "You can let go", he: "אפשר לשחרר" },
-  { en: "Take a deep breath", he: "קח/י נשימה עמוקה" },
-  { en: "You are strong enough", he: "את/ה חזק/ה מספיק" },
+  { en: "Take a deep breath", he: "לקחת נשימה עמוקה" },
+  { en: "You are strong enough", he: "יש בך מספיק כוח" },
 ];
 
 // ── Ball color presets ──────────────────────────────────────────────────────
