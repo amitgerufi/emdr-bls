@@ -1,121 +1,119 @@
-<div dir="rtl">
+# 🌐 EMDR BLS — Bilateral Stimulation in Virtual Reality
 
-# 🌐 EMDR BLS — גירוי בילטרלי במציאות מדומה
+> A system for **EMDR** therapy in a **VR** environment, producing synchronized bilateral
+> stimulation across three channels — visual, auditory, and tactile — with a real-time
+> therapist control dashboard.
 
-> מערכת לטיפול **EMDR** בסביבת **VR**, המייצרת גירוי בילטרלי מסונכרן בשלושה ערוצים —
-> ויזואלי, שמיעתי ומגעי — עם דשבורד שליטה למטפל בזמן אמת.
-
-מיועד ל-**Meta Quest** (2 / 3 / Pro), רץ ישירות מדפדפן המשקפת דרך **WebXR** —
-ללא התקנה, ללא חנות אפליקציות.
-
----
-
-## ✨ מה המערכת עושה
-
-המטופל חובש את המשקפת ורואה **כדור תלת-ממדי** שצף מולו ונע משמאל לימין.
-המטפל מחזיק טלפון/טאבלט עם **דשבורד**, ושולט בחוויה בזמן אמת.
-
-שלושת הערוצים מסונכרנים לאותו מחזור תנועה:
-
-| ערוץ | תיאור |
-|------|--------|
-| 👁 **ויזואלי** | כדור תלת-ממדי עם עומק סטריאוסקופי ומעקב ראש |
-| ♪ **שמיעתי** | צליל "טק" קצר שעובר בין אוזן ימין לשמאל |
-| 📳 **מגעי** | רטט מתחלף בין הקונטרולר הימני לשמאלי |
+Built for **Meta Quest** (2 / 3 / Pro), running directly from the headset browser via
+**WebXR** — no install, no app store.
 
 ---
 
-## 🎛️ הדשבורד (ממשק המטפל)
+## ✨ What it does
 
-- **בקרת סשן** — התחל / השהה / איפוס, טיימר זמן, ומונה חזרות
-- **חיבור אמיתי למשקפת** — אינדיקטור שמראה אם המשקפת מחוברת
-- **תנועה** — מהירות, רוחב, גובה, ותבנית: ⟷ אופקי או ∞ שמינייה
-- **כדור** — גודל, צבע, ותצוגה מקדימה חיה של מה שהמטופל רואה
-- **סביבות רקע** — גוונים (חדר / טבע / חוף / שמיים / ניטרלי) + **רקעי תמונה 360°** שעוטפים את המטופל
-- **ערוצים** — הפעלה/כיבוי נפרד לכל ערוץ + מצב "רטט בלבד (ללא קסדה)"
-- **מוזיקת רקע** — בחירת רצועה (8 רצועות מדיטציה) ושליטה בווליום
-- **שזירות** — שליחת טקסט למטופל (משפטים מוכנים או טקסט חופשי) שצף מעל הכדור, נכנס בפייד-אין ויוצא בפייד-אאוט מבלי להפריע לתנועה
+The patient wears the headset and sees a **3D ball** floating in front of them, moving
+left to right. The therapist holds a phone/tablet with a **dashboard** and controls the
+experience in real time.
 
----
+All three channels stay synchronized to the same movement cycle:
 
-## 🚀 הפעלה
-
-המערכת היא כיום **SaaS מולטי-טננטי**: כל מטפל/ת נכנס/ת עם חשבון Google ומקבל/ת
-חדר אישי + קוד PIN קבוע, כדי שכמה מטפלים יוכלו להשתמש במערכת במקביל בלי
-להפריע אחד לשני.
-
-| מכשיר | כתובת | הערה |
-|-------|--------|------|
-| 🖥️ **דשבורד המטפל/ת** | https://dashboard-five-virid-29.vercel.app | התחברות עם Google. בכניסה הראשונה נוצר חדר + PIN קבועים, מוצגים בראש המסך. |
-| 🥽 **Quest** | https://amitgerufi.github.io/emdr-bls/ | בעלייה מבקש קוד PIN בן 4 ספרות — את/ה מקבל/ת אותו מהדשבורד. נשמר במשקפת לפעמים הבאות. |
-
-1. פתח/י את כתובת הדשבורד, התחבר/י עם Google, ורשמ/י את ה-PIN שמוצג בראש המסך.
-2. פתח/י את כתובת ה-Quest בדפדפן המשקפת, הזן/י את ה-PIN, ולחץ/י **"Enter VR"**.
-3. שלוט/י בחוויה מהדשבורד — כל שינוי מתעדכן במשקפת מיד.
-
-> שני המכשירים מסונכרנים דרך **Firebase** — לא צריך שיהיו באותה רשת. הסנכרון
-> ספציפי לחדר של אותו מטפל/ת (`/sessions/{roomId}`), כך שכמה מטפלים לא
-> מתערבבים זה בזה.
-
-**גרסה ישנה (POC, ללא PIN, חדר גלובלי יחיד):** `dashboard.html`
-(https://amitgerufi.github.io/emdr-bls/dashboard.html) נשארת באוויר כארטיפקט
-ייחוס בלבד — לא לשימוש שוטף, ולא מסונכרנת עם הדשבורד החדש.
+| Channel | Description |
+|---------|--------------|
+| 👁 **Visual** | 3D ball with stereoscopic depth and head tracking |
+| ♪ **Auditory** | A short "tick" sound panning between right and left ear |
+| 📳 **Tactile** | Alternating vibration between the right and left controller |
 
 ---
 
-## 🛠️ טכנולוגיה
+## 🎛️ The Dashboard (therapist interface)
 
-**דשבורד המטפל/ת** (`dashboard/`, פרוס ב-Vercel):
+- **Session control** — start / pause / reset, elapsed-time timer, and rep counter
+- **Live headset connection** — indicator showing whether the headset is connected
+- **Motion** — speed, width, height, and pattern: ⟷ horizontal or ∞ figure-8
+- **Ball** — size, color, and a live preview of exactly what the patient sees
+- **Background environments** — color washes (room / nature / beach / sky / neutral) plus **360° photo backgrounds** that wrap around the patient
+- **Channels** — independent on/off per channel, plus a "haptics only (no headset)" mode
+- **Background music** — track selection (8 meditation tracks) with volume control
+- **Interweaves** — send text to the patient (preset phrases or free text) that floats above the ball, fading in and out without interrupting the movement
+
+---
+
+## 🚀 Getting started
+
+The system is now a **multi-tenant SaaS**: each therapist signs in with a Google account
+and gets their own room + a permanent PIN code, so multiple therapists can use the system
+concurrently without interfering with one another.
+
+| Device | URL | Note |
+|--------|-----|------|
+| 🖥️ **Therapist dashboard** | https://dashboard-five-virid-29.vercel.app | Sign in with Google. On first login a permanent room + PIN are created and shown at the top of the screen. |
+| 🥽 **Quest** | https://amitgerufi.github.io/emdr-bls/ | On launch, asks for a 4-digit PIN — get it from the dashboard. Saved on the headset for next time. |
+
+1. Open the dashboard URL, sign in with Google, and note the PIN shown at the top of the screen.
+2. Open the Quest URL in the headset browser, enter the PIN, and tap **"Enter VR"**.
+3. Control the experience from the dashboard — every change updates on the headset instantly.
+
+> Both devices sync via **Firebase** — they don't need to be on the same network. Sync is
+> scoped to that therapist's room (`/sessions/{roomId}`), so multiple therapists never
+> cross paths.
+
+**Legacy version (POC, no PIN, single global room):** `dashboard.html`
+(https://amitgerufi.github.io/emdr-bls/dashboard.html) stays live as a reference
+artifact only — not for regular use, and not synced with the new dashboard.
+
+---
+
+## 🛠️ Tech stack
+
+**Therapist dashboard** (`dashboard/`, deployed on Vercel):
 - **Next.js** (App Router) + TypeScript + Tailwind v4 + shadcn/ui
-- **Firebase Auth** — התחברות עם Google בלבד
-- **Firestore** — פרופיל מטפל/ת + פריסטים שמורים
-- **Firebase Realtime Database** — כתיבת מצב חיה ל-`/sessions/{roomId}`
+- **Firebase Auth** — Google sign-in only
+- **Firestore** — therapist profile + saved presets
+- **Firebase Realtime Database** — live state written to `/sessions/{roomId}`
 
-**חוויית ה-VR** (`index.html`, פרוס ב-GitHub Pages):
-- **Three.js** מעל **WebXR** — רינדור תלת-ממדי, עומק סטריאוסקופי, מעקב ראש (6DoF)
-- **Web Audio API** — אודיו בילטרלי עם panning סטריאופוני
-- **Gamepad Haptics API** — רטט בקונטרולרים
-- מסך כניסת **PIN** שפותר קוד ל-roomId (`/pins/{pin}`) ומאזין ל-`/sessions/{roomId}`
+**VR experience** (`index.html`, deployed on GitHub Pages):
+- **Three.js** on top of **WebXR** — 3D rendering, stereoscopic depth, head tracking (6DoF)
+- **Web Audio API** — bilateral audio with stereo panning
+- **Gamepad Haptics API** — controller vibration
+- A **PIN** entry screen that resolves the code to a roomId (`/pins/{pin}`) and listens on `/sessions/{roomId}`
 
 ```
-index.html        ← חוויית ה-VR (רצה על ה-Quest), כולל מסך כניסת PIN
-dashboard.html    ← דשבורד ישן (POC, חדר גלובלי יחיד) — ארטיפקט ייחוס
-dashboard/        ← הדשבורד החדש: Next.js SaaS מולטי-טננטי (ראו dashboard/SETUP.md)
-backgrounds/      ← רקעי תמונה 360° (equirectangular, 4096×2048)
-music/            ← קבצי מוזיקת רקע
-SPEC.md           ← מסמך האפיון המקורי + עדכוני ארכיטקטורה
+index.html        ← the VR experience (runs on the Quest), includes the PIN entry screen
+dashboard.html    ← legacy dashboard (POC, single global room) — reference artifact
+dashboard/        ← the new dashboard: multi-tenant Next.js SaaS (see dashboard/SETUP.md)
+backgrounds/      ← 360° photo backgrounds (equirectangular, 4096×2048)
+music/            ← background music files
+SPEC.md           ← original spec document + architecture updates
 ```
 
 ---
 
-## 🎵 הוספת מוזיקה
+## 🎵 Adding music
 
-שים קובץ MP3 בתיקיית [`music/`](music/) והוסף שורה לרשימת `MUSIC` ב-
-[`dashboard/lib/constants.ts`](dashboard/lib/constants.ts) (שם הקובץ + תווית) —
-הוא יופיע ככפתור בדשבורד החדש. פירוט נוסף ב-[music/README.txt](music/README.txt).
-
----
-
-## 📍 סטטוס פיתוח
-
-- [x] **שלב 1** — פרוטוטיפ: כדור תלת-ממדי נע על ה-Quest
-- [x] **שלב 2** — שליטה מקומית מתוך ה-VR
-- [x] **שלב 3** — אודיו בילטרלי + רטט מסונכרן
-- [x] **שלב 4** — דשבורד מטפל + סנכרון בזמן אמת (POC, חדר גלובלי יחיד)
-- [x] **שלב 5** — ליטוש: עיצוב, סביבות, מוזיקה, שמינייה, מונה חזרות
-- [x] **שזירות** — טקסט צף למטופל (משפטים מוכנים + טקסט חופשי)
-- [x] **Milestone 1** — דשבורד SaaS ב-Next.js: התחברות Google, מערכת עיצוב קלינית
-- [x] **Milestone 2** — פאנל שליטה מלא בדשבורד החדש: כל הפרמטרים, פריסטים שמורים, PIN
-- [x] **Milestone 3** — Quest מתחבר לחדר ספציפי לפי PIN (לא חדר גלובלי)
-- [ ] **Milestone 4** — הקשחת כללי אבטחה ב-Firebase, טיפול בניתוקים, חוסן לפריסה
+Drop an MP3 file into the [`music/`](music/) folder and add a line to the `MUSIC` list in
+[`dashboard/lib/constants.ts`](dashboard/lib/constants.ts) (file name + label) — it will
+show up as a button in the new dashboard. See [music/README.txt](music/README.txt) for details.
 
 ---
 
-## ⚕️ הערה קלינית
+## 📍 Development status
 
-מערכת זו היא **כלי בפיתוח עצמי**, לא מוצר רפואי מאושר. שימוש קליני עם מטופלים
-עשוי להיכנס להגדרת "מכשיר רפואי" — מומלץ להתייעץ עם גורם רגולטורי לפני שימוש בפועל,
-ולוודא הסכמה מדעת. יש להתחשב בבחילת תנועה, ברגישות לאור, ובמרחב פיזי בטוח.
-פירוט מלא ב-[SPEC.md](SPEC.md).
+- [x] **Stage 1** — Prototype: 3D ball moving on the Quest
+- [x] **Stage 2** — Local control from within VR
+- [x] **Stage 3** — Bilateral audio + synced vibration
+- [x] **Stage 4** — Therapist dashboard + real-time sync (POC, single global room)
+- [x] **Stage 5** — Polish: styling, environments, music, figure-8, rep counter
+- [x] **Interweaves** — Floating text for the patient (preset phrases + free text)
+- [x] **Milestone 1** — Next.js SaaS dashboard: Google sign-in, clinical design system
+- [x] **Milestone 2** — Full control panel in the new dashboard: all parameters, saved presets, PIN
+- [x] **Milestone 3** — Quest connects to a specific room by PIN (not a global room)
+- [ ] **Milestone 4** — Harden Firebase security rules, handle disconnects, deployment hardening
 
-</div>
+---
+
+## ⚕️ Clinical note
+
+This system is a **self-developed tool**, not an approved medical device. Clinical use with
+patients may fall under the definition of a "medical device" — consult a regulatory authority
+before actual use, and ensure informed consent. Consider motion sickness, light sensitivity,
+and a safe physical space. Full details in [SPEC.md](SPEC.md).
