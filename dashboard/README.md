@@ -1,6 +1,6 @@
-# EMDR BLS — Therapist Dashboard
+# BLS-VR — Therapist Dashboard
 
-Next.js (App Router) SaaS dashboard for the EMDR BLS bilateral-stimulation
+Next.js (App Router) SaaS dashboard for the BLS-VR bilateral-stimulation
 system. Each therapist signs in with Google, gets a permanent room + 4-digit
 PIN, and controls the VR headset client (`../index.html`) live via Firebase.
 

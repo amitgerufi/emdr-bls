@@ -34,9 +34,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EMDR BLS — Therapist Dashboard",
+  title: "BLS-VR — Therapist Dashboard",
   description:
-    "Control platform for bilateral stimulation in VR EMDR therapy. No patient-identifying data is ever stored.",
+    "Control platform for bilateral stimulation in VR therapy. No patient-identifying data is ever stored.",
   icons: {
     icon: [
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "EMDR BLS",
+    title: "BLS-VR",
   },
 };
 

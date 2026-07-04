@@ -1,6 +1,6 @@
-# EMDR System Spec in VR — Development Kickoff Document
+# BLS-VR System Spec — Development Kickoff Document
 
-> This document describes a system for EMDR therapy in a VR environment. It was written to serve as the starting point for development.
+> This document describes a system for bilateral stimulation therapy in a VR environment. It was written to serve as the starting point for development.
 > Read it in full before starting work. For every technical decision — update the user and explain it in plain language, assuming no programming background.
 
 ---
@@ -30,7 +30,7 @@ details, live links, and the current security rules — see [README.md](README.m
 
 ## 1. Overview
 
-The system is designed to produce **bilateral stimulation** for EMDR therapy, across three synchronized channels:
+The system is designed to produce **bilateral stimulation** therapy, across three synchronized channels:
 - **Visual** — an object (ball/light) moving across the patient's field of view
 - **Audio** — a sound panning between the right and left ear in sync with the movement
 - **Haptic** (vibration) — alternating vibration between the two controllers in sync
@@ -160,7 +160,7 @@ Recommended: implement the slider as "size" (actual size) for the first version.
 
 - **Regulation:** clinical use with patients may fall under the definition of a "medical device." It's recommended to consult a legal/regulatory authority (FDA / Ministry of Health) before actual clinical use.
 - **Informed consent:** patients need to know this is a self-developed tool, not an approved product.
-- **Protocol fit:** make sure the stimulation parameters match the EMDR approach the therapist works with.
+- **Protocol fit:** make sure the stimulation parameters match the therapeutic approach the therapist works with.
 - **Physical safety:** account for motion sickness, photosensitive epilepsy (avoid flashing), and a safe physical space for the patient wearing the headset.
 
 ---

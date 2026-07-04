@@ -2,10 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "EMDR BLS — Therapist Dashboard",
-    short_name: "EMDR BLS",
-    description:
-      "Control platform for bilateral stimulation in VR EMDR therapy.",
+    name: "BLS-VR — Therapist Dashboard",
+    short_name: "BLS-VR",
+    description: "Control platform for bilateral stimulation in VR therapy.",
     start_url: "/",
     scope: "/",
     display: "standalone",

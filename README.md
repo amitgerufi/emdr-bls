@@ -1,7 +1,7 @@
-# 🌐 EMDR BLS — Bilateral Stimulation in Virtual Reality
+# 🌐 BLS-VR — Bilateral Stimulation in Virtual Reality
 
-> A system for **EMDR** therapy in a **VR** environment, producing synchronized bilateral
-> stimulation across three channels — visual, auditory, and tactile — with a real-time
+> A system for delivering synchronized bilateral stimulation in a **VR** environment,
+> across three channels — visual, auditory, and tactile — with a real-time
 > therapist control dashboard.
 
 Built for **Meta Quest** (2 / 3 / Pro), running directly from the headset browser via
