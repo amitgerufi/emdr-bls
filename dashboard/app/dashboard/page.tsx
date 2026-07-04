@@ -111,7 +111,7 @@ export default function DashboardPage() {
 
             <Accordion
               type="multiple"
-              defaultValue={["motion", "channels", "interweave", "ambiance", "presets"]}
+              defaultValue={["motion", "channels", "ambiance", "presets", "interweave"]}
               className="space-y-3 lg:block lg:columns-2 lg:gap-3 lg:space-y-0"
             >
               <AccordionItem value="motion" className={SECTION_CLASS}>
@@ -143,19 +143,6 @@ export default function DashboardPage() {
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="interweave" className={SECTION_CLASS}>
-                <AccordionTrigger className={TRIGGER_CLASS}>
-                  <SectionTrigger icon={MessageSquareText} label={t("sectionInterweave")} />
-                </AccordionTrigger>
-                <AccordionContent className="pb-4">
-                  <InterweaveSection
-                    iwStatusText={panel.iwStatusText}
-                    onSend={panel.sendInterweave}
-                    onHide={panel.hideInterweave}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-
               <AccordionItem value="ambiance" className={SECTION_CLASS}>
                 <AccordionTrigger className={TRIGGER_CLASS}>
                   <SectionTrigger icon={Palette} label={t("sectionAmbiance")} />
@@ -182,6 +169,19 @@ export default function DashboardPage() {
                     uid={user.uid}
                     currentSettings={panel.currentPresetSettings}
                     onApply={panel.applyPreset}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="interweave" className={SECTION_CLASS}>
+                <AccordionTrigger className={TRIGGER_CLASS}>
+                  <SectionTrigger icon={MessageSquareText} label={t("sectionInterweave")} />
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <InterweaveSection
+                    iwStatusText={panel.iwStatusText}
+                    onSend={panel.sendInterweave}
+                    onHide={panel.hideInterweave}
                   />
                 </AccordionContent>
               </AccordionItem>
