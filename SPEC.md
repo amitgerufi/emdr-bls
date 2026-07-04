@@ -12,7 +12,7 @@ Since then, the system has migrated to a SaaS that supports multiple concurrent 
 
 - The **therapist dashboard** is now a separate **Next.js** app (`dashboard/`), with
   **Google** sign-in, rather than the static file `dashboard.html` described in section 3 below.
-  `dashboard.html` remains in the repo as a reference artifact only.
+  That legacy file has since been removed from the repo — the Next.js app is the only dashboard now.
 - The **sync layer** is **Firebase Realtime Database** (not WebSocket/WebRTC as
   originally proposed in section 3), with a path **specific to each therapist** — `/sessions/{roomId}`
   and `/status/{roomId}` — instead of a single global path.
@@ -102,7 +102,7 @@ Recommended: implement the slider as "size" (actual size) for the first version.
 
 ### Interweaves — floating text for the patient (implemented)
 - **Purpose:** displaying "interweaves" (cognitive interweaves) to the patient — calming/grounding phrases the therapist sends during the session.
-- **Dashboard:** a grid of preset phrases (tap to send instantly) + a free-text field + a "hide" button. The phrase list can be edited in `INTERWEAVES` inside `dashboard.html`.
+- **Dashboard:** a grid of preset phrases (tap to send instantly) + a free-text field + a "hide" button. The phrase list can be edited in `INTERWEAVES` inside `dashboard/lib/constants.ts`.
 - **Headset:** the text is shown as a 3D panel (`CanvasTexture`, supports RTL Hebrew) floating **above** the ball's path — fades in, holds for a duration based on text length, and fades out, without interrupting the ball's movement.
 - **Control:** auto-hide based on text length, plus a "hide" button for immediate manual dismissal that overrides the automatic timer.
 

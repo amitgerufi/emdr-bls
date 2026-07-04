@@ -57,10 +57,6 @@ concurrently without interfering with one another.
 > scoped to that therapist's room (`/sessions/{roomId}`), so multiple therapists never
 > cross paths.
 
-**Legacy version (POC, no PIN, single global room):** `dashboard.html`
-(https://amitgerufi.github.io/emdr-bls/dashboard.html) stays live as a reference
-artifact only — not for regular use, and not synced with the new dashboard.
-
 ---
 
 ## 🛠️ Tech stack
@@ -79,8 +75,7 @@ artifact only — not for regular use, and not synced with the new dashboard.
 
 ```
 index.html        ← the VR experience (runs on the Quest), includes the PIN entry screen
-dashboard.html    ← legacy dashboard (POC, single global room) — reference artifact
-dashboard/        ← the new dashboard: multi-tenant Next.js SaaS (see dashboard/SETUP.md)
+dashboard/        ← the therapist dashboard: multi-tenant Next.js SaaS (see dashboard/SETUP.md)
 backgrounds/      ← 360° photo backgrounds (equirectangular, 4096×2048)
 music/            ← background music files
 SPEC.md           ← original spec document + architecture updates
