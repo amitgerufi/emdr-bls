@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useLanguage } from "@/lib/language-context";
 import { ENV_COLORS, type GradientId, envPreviewSrc } from "@/lib/constants";
+import type { DeviceMediaItem } from "@/lib/device-media";
 import type { SessionState } from "@/lib/session-state";
 
 /**
@@ -26,17 +27,24 @@ function getImage(src: string): HTMLImageElement {
 interface LivePreviewProps {
   state: SessionState;
   iwText: string;
+  /** Files on the patient's device — their thumbnails stand in for local backgrounds. */
+  deviceMedia: DeviceMediaItem[];
 }
 
-export function LivePreview({ state, iwText }: LivePreviewProps) {
+export function LivePreview({ state, iwText, deviceMedia }: LivePreviewProps) {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef(state);
   const iwTextRef = useRef(iwText);
+  const deviceMediaRef = useRef(deviceMedia);
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    deviceMediaRef.current = deviceMedia;
+  }, [deviceMedia]);
 
   useEffect(() => {
     iwTextRef.current = iwText;
@@ -80,7 +88,7 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      const imageSrc = envPreviewSrc(s.env);
+      const imageSrc = envPreviewSrc(s.env, (id) => deviceMediaRef.current.find((m) => m.id === id)?.thumb);
       if (imageSrc) {
         const img = getImage(imageSrc);
         if (img.complete && img.naturalWidth) {

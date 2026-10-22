@@ -8,6 +8,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeStatus, writeSessionState } from "@/lib/room";
 import {
+  deviceMediaSignature,
+  sanitizeDeviceMedia,
+  type DeviceMediaItem,
+} from "@/lib/device-media";
+import {
   DEFAULT_SESSION_STATE,
   type BgProjection,
   type SessionState,
@@ -27,6 +32,10 @@ export function useSessionPanel(roomId: string | null) {
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [connected, setConnected] = useState(false);
   const lastAliveRef = useRef(0);
+
+  // Files the patient added on their own device, as published by the patient client.
+  const [deviceMedia, setDeviceMedia] = useState<DeviceMediaItem[]>([]);
+  const mediaSignatureRef = useRef("");
 
   const [sets, setSets] = useState(0);
   const [setSecs, setSetSecs] = useState(0);
@@ -198,6 +207,12 @@ export function useSessionPanel(roomId: string | null) {
     const unsubscribe = subscribeStatus(roomId, (s) => {
       setStatus(s);
       if (s) lastAliveRef.current = Date.now();
+      // The status node updates every second (heartbeat); only re-read the media list when it changed.
+      const signature = deviceMediaSignature(s?.media);
+      if (signature !== mediaSignatureRef.current) {
+        mediaSignatureRef.current = signature;
+        setDeviceMedia(sanitizeDeviceMedia(s?.media));
+      }
     });
     const connInterval = setInterval(() => {
       setConnected(Date.now() - lastAliveRef.current < CONNECTION_TIMEOUT_MS);
@@ -223,6 +238,7 @@ export function useSessionPanel(roomId: string | null) {
     state,
     reps: status?.reps ?? 0,
     connected,
+    deviceMedia,
     sets,
     setSecs,
     totalSecs,

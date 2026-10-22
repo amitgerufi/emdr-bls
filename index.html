@@ -51,6 +51,14 @@
       cursor: pointer; user-select: none;
     }
     #changeRoom.hidden { display: none; }
+
+    /* Opens the "Media on this device" panel (visible only after connecting) */
+    #mediaBtn {
+      position: fixed; bottom: 10px; inset-inline-start: 12px; z-index: 40;
+      font-family: Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.35);
+      cursor: pointer; user-select: none;
+    }
+    #mediaBtn.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -66,6 +74,7 @@
     </div>
   </div>
   <div id="changeRoom" class="hidden">Change PIN code</div>
+  <div id="mediaBtn" class="hidden">Media on this device</div>
 
   <script type="importmap">
   {
@@ -79,6 +88,7 @@
   <script type="module">
     import * as THREE from 'three';
     import { VRButton } from 'three/addons/webxr/VRButton.js';
+    import { createDeviceMedia } from './device-media.js';
 
     // ══════════════════════════════════════════
     //  Firebase — database base URL
@@ -258,28 +268,46 @@
     }
 
     // ══════════════════════════════════════════
-    //  Background music — a file from the music/ folder
+    //  Background music — a file from the music/ folder, or one added on this device
     // ══════════════════════════════════════════
     let musicEl = null;     // the current <audio> element
-    let musicId = 'off';    // which track is loaded
+    let musicId = 'off';    // which track is loaded (or loading)
+    let musicUrl = null;    // object URL of a 'local:' track, released when it stops
+    let musicToken = 0;     // bumped whenever the music stops, so a slow load of an earlier choice is dropped
+
+    function stopMusic() {
+      musicToken++;
+      if (musicEl) { musicEl.pause(); musicEl = null; }
+      if (musicUrl) { URL.revokeObjectURL(musicUrl); musicUrl = null; }
+      musicId = 'off';
+    }
+
+    // 'off' | a built-in track id (music/<id>.mp3) | 'local:<id>' (a file on this device)
+    async function startMusic(id) {
+      musicId = id;                              // claim it right away, so repeated updates don't start it twice
+      const token = musicToken;
+      let url = `music/${id}.mp3`;
+      if (id.startsWith('local:')) {
+        await deviceMedia.ready;
+        const item = deviceMedia.get(id.slice(6));
+        const blob = item && item.kind === 'audio' ? await deviceMedia.getBlob(item.id) : null;
+        if (token !== musicToken) return;        // the choice changed while the file was loading
+        if (!blob) return;                       // file isn't on this device → silence, like a missing track
+        url = musicUrl = URL.createObjectURL(blob);
+      }
+      musicEl = new Audio(url);
+      musicEl.loop = true;
+      musicEl.volume = Math.max(0, Math.min(1, S.musicVolume / 9));
+      musicEl.play().catch(() => {}); // missing file / autoplay blocked → ignored (retried after the first tap)
+    }
 
     function applyMusic() {
       // stop if turned off or the selection changed
-      if (S.music === 'off' || S.music !== musicId) {
-        if (musicEl) { musicEl.pause(); musicEl = null; }
-        musicId = 'off';
-      }
-      // volume (0–9 → 0.0–1.0)
-      const vol = Math.max(0, Math.min(1, S.musicVolume / 9));
+      if (S.music === 'off' || S.music !== musicId) stopMusic();
       // load and play the selected track
-      if (S.music !== 'off' && S.music !== musicId) {
-        musicEl = new Audio(`music/${S.music}.mp3`);
-        musicEl.loop = true;
-        musicEl.volume = vol;
-        musicEl.play().catch(() => {}); // missing file / autoplay blocked → ignored
-        musicId = S.music;
-      }
-      if (musicEl) musicEl.volume = vol;
+      if (S.music !== 'off' && S.music !== musicId) startMusic(S.music);
+      // volume (0–9 → 0.0–1.0)
+      if (musicEl) musicEl.volume = Math.max(0, Math.min(1, S.musicVolume / 9));
     }
 
     // resuming audio requires a user gesture
@@ -308,6 +336,10 @@
     const FLAT_VR_VFOV  = 80;    // ° — screen height limit inside the headset
     const FLAT_SURROUND = { top: '#10151c', bottom: '#05070a', clear: 0x05070a }; // the dark room around the screen
     const BG_AUDIO_MAX_SECONDS = 60;
+    const BG_AUDIO_MAX_BYTES = 40e6;   // bigger files are never read into memory just for their sound
+
+    // the patient's own files, kept on this device (device-media.js) — the dashboard only ever sees a list of them
+    const deviceMedia = createDeviceMedia({ onChange: () => publishMedia() });
 
     const bg = {
       key: null,         // the env value being shown / loaded ('video:…' | 'local:…')
@@ -323,11 +355,15 @@
 
     const isMediaEnv = key => /^(video|local):[A-Za-z0-9_-]{1,80}$/.test(key || '');
 
-    // env → { url, kind: 'video' | 'image', revoke } — or null when the file isn't available
+    // env → { url, kind: 'video' | 'image', revoke, size } — or null when the file isn't available
     async function resolveMedia(key) {
       const [source, id] = key.split(':');
-      if (source === 'video') return { url: `backgrounds/${id}.mp4`, kind: 'video', revoke: false };
-      return null;   // 'local:' files are added together with the device media library
+      if (source === 'video') return { url: `backgrounds/${id}.mp4`, kind: 'video', revoke: false, size: 0 };
+      await deviceMedia.ready;
+      const item = deviceMedia.get(id);
+      const blob = item && item.kind !== 'audio' ? await deviceMedia.getBlob(id) : null;
+      if (!blob) return null;
+      return { url: URL.createObjectURL(blob), kind: item.kind, revoke: true, size: blob.size };
     }
 
     // called from applyAll(): picks the right background for S.env / S.bgProjection / S.bgVolume
@@ -379,7 +415,7 @@
         bg.aspect = video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 16 / 9;
         showMedia();
         video.play().catch(() => {});            // muted, so autoplay is allowed
-        loadBgAudio(res.url, token, video);
+        loadBgAudio(res.url, token, video, res.size);
       } catch (err) {
         if (token !== bg.token) return;
         console.warn('Background media failed:', err);
@@ -482,9 +518,9 @@
       return new Promise((ok, fail) => { const p = ctx.decodeAudioData(data, ok, fail); if (p && p.then) p.then(ok, fail); });
     }
 
-    async function loadBgAudio(url, token, video) {
+    async function loadBgAudio(url, token, video, size) {
       try {
-        if (video.duration <= BG_AUDIO_MAX_SECONDS) {
+        if (video.duration <= BG_AUDIO_MAX_SECONDS && (!size || size <= BG_AUDIO_MAX_BYTES)) {
           const data = await (await fetch(url)).arrayBuffer();
           const buf = await decodeAudio(data);
           if (token !== bg.token) return;
@@ -716,8 +752,20 @@
     function reportStatus() {
       if (!roomId) return;
       fetch(`${DB}/status/${roomId}.json`, {
-        method: 'PUT',
+        method: 'PATCH',                         // only these fields — leaves the published media list alone
         body: JSON.stringify({ alive: Date.now(), reps, running: S.running }),
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => {});
+    }
+
+    // shares the list of files on this device (names + thumbnails, never the files) with the dashboard
+    async function publishMedia() {
+      if (!roomId) return;
+      await deviceMedia.ready;
+      const list = deviceMedia.publicList();
+      fetch(`${DB}/status/${roomId}/media.json`, {
+        method: 'PUT',
+        body: JSON.stringify(Object.keys(list).length ? list : null),
         headers: { 'Content-Type': 'application/json' },
       }).catch(() => {});
     }
@@ -733,14 +781,17 @@
     const pinSubmit   = document.getElementById('pinSubmit');
     const pinErrorEl  = document.getElementById('pinError');
     const changeRoomEl = document.getElementById('changeRoom');
+    const mediaBtnEl   = document.getElementById('mediaBtn');
 
     function startSession(id) {
       roomId = id;
       localStorage.setItem(ROOM_STORAGE_KEY, id);
       pinScreen.classList.add('hidden');
       changeRoomEl.classList.remove('hidden');
+      if (deviceMedia.supported) mediaBtnEl.classList.remove('hidden');
       connectFirebase(id);
       reportStatus();
+      publishMedia();
       if (statusTimer) clearInterval(statusTimer);
       statusTimer = setInterval(reportStatus, 1000); // heartbeat every second
     }
@@ -781,6 +832,7 @@
       localStorage.removeItem(ROOM_STORAGE_KEY);
       location.reload();
     });
+    mediaBtnEl.addEventListener('click', () => deviceMedia.openPanel());
 
     // auto-connect if a roomId was already saved from a previous session on this headset
     const savedRoomId = localStorage.getItem(ROOM_STORAGE_KEY);

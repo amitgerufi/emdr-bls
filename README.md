@@ -31,9 +31,10 @@ All three channels stay synchronized to the same movement cycle:
 - **Live headset connection** — indicator showing whether the headset is connected
 - **Motion** — speed, width, height, and pattern: ⟷ horizontal or ∞ figure-8
 - **Ball** — size, color, and a live preview of exactly what the patient sees
-- **Background environments** — color washes (room / nature / beach / sky / neutral) plus **360° photo backgrounds** that wrap around the patient
+- **Background environments** — color washes (room / nature / beach / sky / neutral), **360° photo backgrounds** that wrap around the patient, and **looping video backgrounds** with their own sound (see [Video backgrounds](#-video--image-backgrounds))
 - **Channels** — independent on/off per channel, plus a "haptics only (no headset)" mode
-- **Background music** — track selection (8 meditation tracks) with volume control
+- **Background music** — track selection (8 meditation tracks) with volume control, or music from the patient's own device
+- **Your own media** — videos, images and music the patient adds on their own device, selectable as the background or the music (see [Your own media](#-your-own-media-on-the-patients-device))
 - **Interweaves** — send text to the patient (preset phrases or free text) that floats above the ball, fading in and out without interrupting the movement
 
 ---
@@ -75,8 +76,9 @@ concurrently without interfering with one another.
 
 ```
 index.html        ← the VR experience (runs on the Quest), includes the PIN entry screen
+device-media.js   ← the patient's own media library (kept on their device) + its "Media on this device" panel
 dashboard/        ← the therapist dashboard: multi-tenant Next.js SaaS (see dashboard/SETUP.md)
-backgrounds/      ← 360° photo backgrounds (equirectangular, 4096×2048)
+backgrounds/      ← 360° photo backgrounds (equirectangular, 4096×2048) and looping video backgrounds (.mp4)
 music/            ← background music files
 SPEC.md           ← original spec document + architecture updates
 ```
@@ -91,6 +93,43 @@ show up as a button in the new dashboard. See [music/README.txt](music/README.tx
 
 ---
 
+## 🎬 Video & image backgrounds
+
+Besides color washes and 360° photos, a background can be a **looping video** (with its own sound) or a
+**still image**, shown either on a flat **screen** in front of the patient or wrapped around them (**360°**).
+Pick one in the dashboard under *Ambiance → Video*; the **Sound** slider sets the video's own volume.
+Built-in videos live in [`backgrounds/`](backgrounds/) (for example the two airplane-cabin loops).
+
+**Adding a built-in video**
+
+1. Make a short, seamless loop — a few seconds is enough, the player repeats it endlessly and its sound loops
+   without a click. (With Claude and the video-studio skill: *"make this clip a seamless loop, normalise the
+   sound to -20 LUFS, H.264 + AAC, 1280×720"*.) Plain H.264 video + AAC audio plays everywhere.
+2. Put it in `backgrounds/<id>.mp4` and a poster picture (JPG, about 640 px wide) in
+   `dashboard/public/backgrounds/<id>.jpg`.
+3. Add a line to `VIDEOS` in [`dashboard/lib/constants.ts`](dashboard/lib/constants.ts) — the id, an English and a
+   Hebrew label, and `flat` (a screen) or `360`.
+
+## 📁 Your own media (on the patient's device)
+
+The patient can add **their own videos, images and music** — on the headset or a computer — without uploading
+anything:
+
+1. On the patient screen (in the headset browser, before entering VR) tap **Media on this device → Add files**.
+2. The files are stored in that browser, on that device only. The dashboard receives just a list — name, type,
+   length and a small thumbnail — and shows it under **On the patient's device**, in the Video group and next to
+   the music tracks.
+3. Pick a file in the dashboard. For a video or picture choose **Screen** or **360°** (a 2:1 picture is
+   suggested as 360°); the **Sound** slider sets a video's own volume.
+
+**Getting a file onto a Quest:** upload it to Google Drive (even from a phone), open Drive in the headset
+browser and download the file, then add it from the Downloads folder in step 1. A USB cable to the headset's
+*Download* folder works too.
+
+Good to know: the library belongs to one device (another headset has its own); what plays is whatever that
+device's browser supports (MP4/H.264, JPG/PNG, MP3/M4A — a file that can't be played is rejected when it is
+added); pictures wider than 4096 px are scaled down when added so the headset doesn't run out of memory.
+
 ## 📍 Development status
 
 - [x] **Stage 1** — Prototype: 3D ball moving on the Quest
@@ -102,6 +141,7 @@ show up as a button in the new dashboard. See [music/README.txt](music/README.tx
 - [x] **Milestone 1** — Next.js SaaS dashboard: Google sign-in, clinical design system
 - [x] **Milestone 2** — Full control panel in the new dashboard: all parameters, saved presets, PIN
 - [x] **Milestone 3** — Quest connects to a specific room by PIN (not a global room)
+- [x] **Media backgrounds** — looping video / image backgrounds with sound, plus a per-device library of the patient's own media
 - [ ] **Milestone 4** — Harden Firebase security rules, handle disconnects, deployment hardening
 
 ---

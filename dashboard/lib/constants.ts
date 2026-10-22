@@ -57,17 +57,22 @@ export const VIDEOS: VideoEnv[] = [
 export const VIDEO_ENV_PREFIX = "video:";
 export const LOCAL_ENV_PREFIX = "local:";
 export const videoEnv = (id: string) => `${VIDEO_ENV_PREFIX}${id}`;
+export const localEnv = (id: string) => `${LOCAL_ENV_PREFIX}${id}`;
 export const isVideoEnv = (env: string) => env.startsWith(VIDEO_ENV_PREFIX);
 export const isLocalEnv = (env: string) => env.startsWith(LOCAL_ENV_PREFIX);
 export const isMediaEnv = (env: string) => isVideoEnv(env) || isLocalEnv(env);
 
-/** Image to draw for a background in the live preview (null → a color wash). */
-export function envPreviewSrc(env: string): string | null {
+/**
+ * Image to draw for a background in the live preview (null → a color wash).
+ * `localThumb` looks up the thumbnail of a file on the patient's device.
+ */
+export function envPreviewSrc(env: string, localThumb?: (id: string) => string | undefined): string | null {
   if (PHOTO_IDS.has(env)) return `/backgrounds/${env}.jpg`;
   if (isVideoEnv(env)) {
     const id = env.slice(VIDEO_ENV_PREFIX.length);
     return VIDEOS.some((v) => v.id === id) ? `/backgrounds/${id}.jpg` : null;
   }
+  if (isLocalEnv(env)) return localThumb?.(env.slice(LOCAL_ENV_PREFIX.length)) ?? null;
   return null;
 }
 

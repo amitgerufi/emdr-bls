@@ -73,4 +73,9 @@ export interface SessionStatus {
   alive: number; // Date.now() heartbeat
   reps: number; // completed movement cycles
   running: boolean;
+  /**
+   * The files the patient added on their own device (id → small record). Raw and
+   * untrusted — read it through `sanitizeDeviceMedia` (lib/device-media.ts).
+   */
+  media?: unknown;
 }

@@ -92,6 +92,7 @@ Recommended: implement the slider as "size" (actual size) for the first version.
 
 ### Environment selection (dropdown)
 - Calm room / nature scenery / beach / sky-space / neutral background
+- **Media backgrounds (added later):** a background can also be a looping **video** (with its own sound) or a **still image**, shown on a flat screen in front of the patient or wrapped around them (360°). Built-in loops live in `backgrounds/<id>.mp4`; the patient can also add their own videos, images and music on their own device ("Media on this device"), and the therapist picks them from the dashboard. Those files never leave the device — only a list with thumbnails is shared (`status/{roomId}/media`). See [README.md](README.md).
 
 ### Session control
 - Start / stop button

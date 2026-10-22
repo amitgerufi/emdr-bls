@@ -96,7 +96,7 @@ export default function DashboardPage() {
             {/* Left rail — the live monitor + session vitals, pinned on desktop
                 so they stay in view while controls scroll on the right. */}
             <div className="flex flex-col gap-3.5 lg:sticky lg:top-[72px] lg:self-start">
-              <LivePreview state={panel.state} iwText={panel.iwStatusText} />
+              <LivePreview state={panel.state} iwText={panel.iwStatusText} deviceMedia={panel.deviceMedia} />
 
               <SessionHero
                 phase={panel.phase}
@@ -155,7 +155,10 @@ export default function DashboardPage() {
                     music={panel.state.music}
                     musicVolume={panel.state.musicVolume}
                     bgVolume={panel.state.bgVolume}
+                    bgProjection={panel.state.bgProjection}
+                    deviceMedia={panel.deviceMedia}
                     setEnv={panel.setEnv}
+                    setBgProjection={panel.setBgProjection}
                     setMusic={panel.setMusic}
                     setField={panel.setField}
                     step={panel.step}
