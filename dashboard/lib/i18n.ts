@@ -123,6 +123,8 @@ export const dict = {
   backgroundMusic: { en: "Background music", he: "מוזיקת רקע" },
   none: { en: "None", he: "ללא" },
   musicLoopHint: { en: "Music plays in the background on a loop.", he: "המוזיקה מתנגנת ברקע בלולאה." },
+  backgroundVideo: { en: "Video", he: "וידאו" },
+  bgSound: { en: "Sound", he: "סאונד" },
 
   // Presets section
   presetNamePlaceholder: { en: "Name for current settings…", he: "שם להגדרות הנוכחיות…" },

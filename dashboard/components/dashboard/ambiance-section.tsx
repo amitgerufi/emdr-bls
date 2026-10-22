@@ -1,16 +1,17 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Play } from "lucide-react";
 import { FieldSlider } from "@/components/dashboard/field-slider";
 import { useLanguage } from "@/lib/language-context";
-import { ENV_COLORS, GRADIENT_IDS, MUSIC, PHOTOS, envName } from "@/lib/constants";
-import type { SessionState } from "@/lib/session-state";
+import { ENV_COLORS, GRADIENT_IDS, MUSIC, PHOTOS, VIDEOS, envName, isMediaEnv, videoEnv } from "@/lib/constants";
+import type { BgProjection, SessionState } from "@/lib/session-state";
 
 interface AmbianceSectionProps {
   env: string;
   music: string;
   musicVolume: number;
-  setEnv: (id: string) => void;
+  bgVolume: number;
+  setEnv: (id: string, projection?: BgProjection) => void;
   setMusic: (id: string) => void;
   setField: <K extends keyof SessionState>(key: K, value: SessionState[K]) => void;
   step: <K extends keyof SessionState>(key: K, dir: 1 | -1, min: number, max: number) => void;
@@ -20,6 +21,7 @@ export function AmbianceSection({
   env,
   music,
   musicVolume,
+  bgVolume,
   setEnv,
   setMusic,
   setField,
@@ -71,6 +73,46 @@ export function AmbianceSection({
             );
           })}
         </div>
+      </div>
+
+      <div>
+        <p className="mb-2.5 text-xs text-muted-foreground">{t("backgroundVideo")}</p>
+        <div className="grid grid-cols-3 gap-2">
+          {VIDEOS.map((v) => {
+            const selected = env === videoEnv(v.id);
+            return (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setEnv(videoEnv(v.id), v.projection)}
+                style={{ backgroundImage: `url(/backgrounds/${v.id}.jpg)` }}
+                className={`relative flex h-[60px] items-end justify-center overflow-hidden rounded-xl border-2 bg-muted bg-cover bg-center ${
+                  selected ? "border-primary" : "border-transparent"
+                }`}
+              >
+                <span className="absolute top-1 left-1.5 flex size-4 items-center justify-center rounded-full bg-black/55">
+                  <Play className="size-2.5 fill-white text-white" aria-hidden />
+                </span>
+                <span className="w-full bg-gradient-to-t from-black/70 to-transparent px-1 pb-1 text-[10.5px] leading-tight font-semibold text-white">
+                  {v.label[lang]}
+                </span>
+                {selected && <Check className="absolute top-1 right-1.5 size-3.5 text-white drop-shadow" />}
+              </button>
+            );
+          })}
+        </div>
+        {isMediaEnv(env) && (
+          <div className="pt-3">
+            <FieldSlider
+              label={t("bgSound")}
+              value={bgVolume}
+              min={0}
+              max={9}
+              onChange={(v) => setField("bgVolume", v)}
+              onStep={(d) => step("bgVolume", d, 0, 9)}
+            />
+          </div>
+        )}
       </div>
 
       <div>

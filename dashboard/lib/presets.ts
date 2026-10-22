@@ -36,7 +36,9 @@ export type PresetSettings = Pick<
   | "music"
   | "musicVolume"
   | "hapticOnly"
->;
+> &
+  // Optional: presets saved before media backgrounds existed don't have them.
+  Partial<Pick<SessionState, "bgProjection" | "bgVolume">>;
 
 export interface SessionPreset {
   id: string;

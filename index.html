@@ -101,7 +101,9 @@
       audioVolume: 5,           // 1–9 volume of the BLS "tick" sound
       haptic:     true,
       hapticStrength: 5,        // 1–9 vibration strength
-      env:        'sky',        // background environment
+      env:        'sky',        // background: a color wash / 360 photo id, 'video:<id>' (backgrounds/<id>.mp4) or 'local:<id>' (a file on this device)
+      bgProjection: 'flat',     // for video:/local: backgrounds — 'flat' (a screen in front of you) or '360' (wraps around you)
+      bgVolume:   5,            // 0–9 volume of the background video's own sound
       music:      'off',        // 'off' | '1' | '2' | '3'
       musicVolume: 5,           // 0–9
       hapticOnly: false,
@@ -233,6 +235,7 @@
     //  Audio — a short "tick" at each edge
     // ══════════════════════════════════════════
     let audioCtx = null;
+    let userGesture = false;   // sound may only start after the first tap / click / Enter VR
     function initAudio() {
       if (audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -281,12 +284,258 @@
 
     // resuming audio requires a user gesture
     function resumeAudio() {
+      userGesture = true;
       if (!audioCtx) initAudio();
       else if (audioCtx.state === 'suspended') audioCtx.resume();
       applyMusic();
+      resumeMedia();
     }
     document.addEventListener('click', resumeAudio);
     renderer.xr.addEventListener('sessionstart', resumeAudio);
+    renderer.xr.addEventListener('sessionstart', layoutScreen);   // the flat screen is sized differently inside the headset
+    renderer.xr.addEventListener('sessionend', layoutScreen);
+
+    // ══════════════════════════════════════════
+    //  Media backgrounds — a looping video or a still image.
+    //    'video:<id>'  → backgrounds/<id>.mp4          (built in)
+    //    'local:<id>'  → a file added on this device   (see device-media.js)
+    //  Shown on a flat "screen" in front of the patient ('flat') or wrapped around them ('360').
+    //  The video's own sound is decoded once and looped sample-exactly through Web Audio, so there is
+    //  no click at the loop point. Videos longer than a minute use the <video> element's audio instead.
+    // ══════════════════════════════════════════
+    const FLAT_DISTANCE = 12;    // m — far behind the ball (1.5 m) and the interweave text (2 m)
+    const FLAT_VR_HFOV  = 110;   // ° — screen width inside the headset
+    const FLAT_VR_VFOV  = 80;    // ° — screen height limit inside the headset
+    const FLAT_SURROUND = { top: '#10151c', bottom: '#05070a', clear: 0x05070a }; // the dark room around the screen
+    const BG_AUDIO_MAX_SECONDS = 60;
+
+    const bg = {
+      key: null,         // the env value being shown / loaded ('video:…' | 'local:…')
+      token: 0,          // bumped on every change, so late results of an earlier choice are dropped
+      projection: null,  // 'flat' | '360'
+      video: null,       // <video> element (null for still images)
+      tex: null,         // THREE.VideoTexture / THREE.Texture
+      url: null,         // object URL to release (files from this device)
+      aspect: 16 / 9,
+      screen: null,      // the flat screen mesh, created on first use
+    };
+    const bgAudio = { buf: null, src: null, gain: null, elementMode: false };
+
+    const isMediaEnv = key => /^(video|local):[A-Za-z0-9_-]{1,80}$/.test(key || '');
+
+    // env → { url, kind: 'video' | 'image', revoke } — or null when the file isn't available
+    async function resolveMedia(key) {
+      const [source, id] = key.split(':');
+      if (source === 'video') return { url: `backgrounds/${id}.mp4`, kind: 'video', revoke: false };
+      return null;   // 'local:' files are added together with the device media library
+    }
+
+    // called from applyAll(): picks the right background for S.env / S.bgProjection / S.bgVolume
+    function applyBackground() {
+      if (!isMediaEnv(S.env)) {
+        if (bg.key) stopMediaBackground();
+        applyEnv(S.env);
+        return;
+      }
+      const projection = S.bgProjection === '360' ? '360' : 'flat';
+      if (S.env === bg.key) {                    // same media: only the projection or the volume may have changed
+        if (projection !== bg.projection) { bg.projection = projection; if (bg.tex) showMedia(); }
+        applyBgVolume();
+        return;
+      }
+      loadMediaBackground(S.env, projection);
+    }
+
+    async function loadMediaBackground(key, projection) {
+      stopMediaBackground();                     // releases the previous media and cancels loads in flight
+      const token = bg.token;
+      bg.key = key; bg.projection = projection;
+      try {
+        const res = await resolveMedia(key);
+        if (!res) throw new Error('media not available');
+        if (token !== bg.token) { if (res.revoke) URL.revokeObjectURL(res.url); return; }
+        if (res.revoke) bg.url = res.url;
+
+        if (res.kind === 'image') {
+          const tex = await texLoader.loadAsync(res.url);
+          if (token !== bg.token) { tex.dispose(); return; }
+          tex.colorSpace = THREE.SRGBColorSpace;
+          bg.tex = tex;
+          bg.aspect = tex.image.width / tex.image.height;
+          showMedia();
+          return;
+        }
+
+        const video = createBgVideo(res.url);
+        bg.video = video;
+        await new Promise((ok, fail) => {
+          video.addEventListener('loadeddata', ok, { once: true });
+          video.addEventListener('error', () => fail(new Error('video failed to load')), { once: true });
+        });
+        if (token !== bg.token) return;
+        const tex = new THREE.VideoTexture(video);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        bg.tex = tex;
+        bg.aspect = video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 16 / 9;
+        showMedia();
+        video.play().catch(() => {});            // muted, so autoplay is allowed
+        loadBgAudio(res.url, token, video);
+      } catch (err) {
+        if (token !== bg.token) return;
+        console.warn('Background media failed:', err);
+        releaseMedia();
+        setGradient(ENVIRONMENTS.neutral);       // same fallback as a missing photo
+      }
+    }
+
+    function createBgVideo(url) {
+      const v = document.createElement('video');
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto';
+      v.setAttribute('playsinline', '');
+      v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none;z-index:-1';
+      v.src = url;
+      document.body.appendChild(v);              // kept in the page so browsers don't throttle it
+      return v;
+    }
+
+    // puts bg.tex on the screen ('flat') or on the sky dome ('360')
+    function showMedia() {
+      if (!bg.tex) return;
+      if (bg.projection === '360') {
+        bg.tex.wrapS = THREE.RepeatWrapping;
+        bg.tex.repeat.x = -1;                    // not mirrored when seen from inside the sphere
+        bg.tex.offset.x = 0.25;                  // image centre straight ahead, the seam behind the head
+        bg.tex.needsUpdate = true;
+        skyMat.map = bg.tex; skyMat.needsUpdate = true;
+        renderer.setClearColor(0x000000);
+        if (bg.screen) bg.screen.visible = false;
+      } else {
+        bg.tex.wrapS = THREE.ClampToEdgeWrapping;
+        bg.tex.repeat.x = 1;
+        bg.tex.offset.x = 0;
+        bg.tex.needsUpdate = true;
+        setGradient(FLAT_SURROUND);              // dark room behind and around the screen
+        ensureScreen();
+        bg.screen.material.map = bg.tex;
+        bg.screen.material.needsUpdate = true;
+        bg.screen.visible = true;
+        layoutScreen();
+      }
+    }
+
+    function ensureScreen() {
+      if (bg.screen) return;
+      bg.screen = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        new THREE.MeshBasicMaterial({ toneMapped: false })
+      );
+      bg.screen.position.set(0, 0, -FLAT_DISTANCE);
+      bg.screen.frustumCulled = false;
+      bg.screen.visible = false;
+      scene.add(bg.screen);
+    }
+
+    // Sizes the screen. On a flat display it covers the whole window (crops instead of letterboxing);
+    // inside the headset it is a cinema screen of at most FLAT_VR_HFOV × FLAT_VR_VFOV degrees.
+    function layoutScreen() {
+      if (!bg.screen || !bg.screen.visible) return;
+      const rad = THREE.MathUtils.degToRad;
+      let w, h;
+      if (renderer.xr.isPresenting) {
+        const maxW = 2 * FLAT_DISTANCE * Math.tan(rad(FLAT_VR_HFOV / 2));
+        const maxH = 2 * FLAT_DISTANCE * Math.tan(rad(FLAT_VR_VFOV / 2));
+        w = maxW; h = w / bg.aspect;
+        if (h > maxH) { h = maxH; w = h * bg.aspect; }
+      } else {
+        const visH = 2 * FLAT_DISTANCE * Math.tan(rad(camera.fov / 2));
+        const visW = visH * camera.aspect;
+        h = visH; w = h * bg.aspect;
+        if (w < visW) { w = visW; h = w / bg.aspect; }
+      }
+      bg.screen.scale.set(w, h, 1);
+    }
+
+    // frees the video, texture, sound and object URL of the current media
+    function releaseMedia() {
+      stopBgAudio();
+      if (bg.video) {
+        bg.video.pause(); bg.video.removeAttribute('src'); bg.video.load(); bg.video.remove();
+        bg.video = null;
+      }
+      if (bg.tex && skyMat.map === bg.tex) setGradient(FLAT_SURROUND);   // never leave the dome holding a freed texture
+      if (bg.tex) { bg.tex.dispose(); bg.tex = null; }
+      if (bg.url) { URL.revokeObjectURL(bg.url); bg.url = null; }
+      if (bg.screen) bg.screen.visible = false;
+    }
+
+    function stopMediaBackground() {
+      bg.token++;
+      releaseMedia();
+      bg.key = null; bg.projection = null;
+      currentEnv = null;                         // the next applyEnv() must really repaint its background
+    }
+
+    // ── the background video's sound ──
+    function decodeAudio(data) {
+      const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      const ctx = new Ctx(2, 1, 48000);          // only used to decode — works before the first tap
+      return new Promise((ok, fail) => { const p = ctx.decodeAudioData(data, ok, fail); if (p && p.then) p.then(ok, fail); });
+    }
+
+    async function loadBgAudio(url, token, video) {
+      try {
+        if (video.duration <= BG_AUDIO_MAX_SECONDS) {
+          const data = await (await fetch(url)).arrayBuffer();
+          const buf = await decodeAudio(data);
+          if (token !== bg.token) return;
+          bgAudio.buf = buf;
+        } else {
+          bgAudio.elementMode = true;            // a long video plays its own sound
+        }
+      } catch { /* no sound track, or it can't be decoded → the background stays silent */ }
+      if (token === bg.token) startBgAudio();
+    }
+
+    function startBgAudio() {
+      applyBgVolume();
+      if (!audioCtx || !bgAudio.buf || bgAudio.src) return;   // waits for the first tap (see resumeAudio)
+      const src = audioCtx.createBufferSource();
+      src.buffer = bgAudio.buf;
+      src.loop = true;
+      const gain = audioCtx.createGain();
+      gain.gain.value = 0;                       // fades up to the chosen volume
+      src.connect(gain); gain.connect(audioCtx.destination);
+      src.start();
+      bgAudio.src = src; bgAudio.gain = gain;
+      applyBgVolume();
+    }
+
+    function applyBgVolume() {
+      const vol = Math.max(0, Math.min(1, (Number(S.bgVolume) || 0) / 9));
+      if (bgAudio.gain && audioCtx) bgAudio.gain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
+      if (bg.video && bgAudio.elementMode) {
+        bg.video.volume = vol;
+        bg.video.muted = !userGesture || vol === 0;           // sound is only allowed after a tap
+      }
+    }
+
+    function stopBgAudio() {
+      if (bgAudio.src) { try { bgAudio.src.stop(); } catch { /* already stopped */ } bgAudio.src.disconnect(); }
+      if (bgAudio.gain) bgAudio.gain.disconnect();
+      bgAudio.src = null; bgAudio.gain = null; bgAudio.buf = null; bgAudio.elementMode = false;
+    }
+
+    // after a tap / Enter VR / coming back to the page: start whatever autoplay rules held back
+    function resumeMedia() {
+      if (bg.video && bg.video.paused) bg.video.play().catch(() => {});
+      if (musicEl && musicEl.paused) musicEl.play().catch(() => {});
+      startBgAudio();
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      resumeMedia();
+    });
 
     // ══════════════════════════════════════════
     //  Alternating vibration
@@ -450,7 +699,7 @@
       target.posY  = toHeight(S.height);
       target.color.set(S.color);
       sphere.visible = S.visual;
-      applyEnv(S.env);
+      applyBackground();
       applyMusic();
       applyInterweave();
       // session reset (reset button) or a new set starting (play) → resets phase and reps
@@ -551,10 +800,14 @@
     // ══════════════════════════════════════════
     const clock = new THREE.Clock();
     let prevA = false, prevB = false;
+    let videoWatch = 0;
     let hapticR = false, hapticL = false;
 
     renderer.setAnimationLoop(() => {
       const dt = clock.getDelta();
+
+      // safety net: if the browser paused the background video, restart it (checked once a second)
+      if (bg.video && bg.video.paused && (videoWatch += dt) > 1) { videoWatch = 0; bg.video.play().catch(() => {}); }
 
       // A/B buttons — speed change (backup without the dashboard)
       const session = renderer.xr.getSession();
@@ -625,6 +878,7 @@
       camera.aspect = innerWidth / innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(innerWidth, innerHeight);
+      layoutScreen();
     });
 
   </script>

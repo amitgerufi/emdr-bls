@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeStatus, writeSessionState } from "@/lib/room";
 import {
   DEFAULT_SESSION_STATE,
+  type BgProjection,
   type SessionState,
   type SessionStatus,
 } from "@/lib/session-state";
@@ -89,7 +90,16 @@ export function useSessionPanel(roomId: string | null) {
     (pattern: SessionState["pattern"]) => update({ pattern }, true),
     [update],
   );
-  const setEnv = useCallback((env: string) => update({ env }, true), [update]);
+  // Picking a video/local background also sets how it is shown (flat screen or 360°).
+  const setEnv = useCallback(
+    (env: string, projection?: BgProjection) =>
+      update(projection ? { env, bgProjection: projection } : { env }, true),
+    [update],
+  );
+  const setBgProjection = useCallback(
+    (bgProjection: BgProjection) => update({ bgProjection }, true),
+    [update],
+  );
   const setMusic = useCallback((music: string) => update({ music }, true), [update]);
   const setColor = useCallback((color: string) => update({ color }, true), [update]);
 
@@ -173,6 +183,8 @@ export function useSessionPanel(roomId: string | null) {
       haptic: s.haptic,
       hapticStrength: s.hapticStrength,
       env: s.env,
+      bgProjection: s.bgProjection,
+      bgVolume: s.bgVolume,
       music: s.music,
       musicVolume: s.musicVolume,
       hapticOnly: s.hapticOnly,
@@ -222,6 +234,7 @@ export function useSessionPanel(roomId: string | null) {
     toggle,
     setPattern,
     setEnv,
+    setBgProjection,
     setMusic,
     setColor,
     togglePlay,

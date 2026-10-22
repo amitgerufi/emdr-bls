@@ -154,6 +154,7 @@ export default function DashboardPage() {
                     env={panel.state.env}
                     music={panel.state.music}
                     musicVolume={panel.state.musicVolume}
+                    bgVolume={panel.state.bgVolume}
                     setEnv={panel.setEnv}
                     setMusic={panel.setMusic}
                     setField={panel.setField}
