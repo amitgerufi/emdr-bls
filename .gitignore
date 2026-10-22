@@ -2,3 +2,6 @@ node_modules/
 package-lock.json
 .vercel
 .env*
+
+# raw source clips (only the finished loops in backgrounds/ are used)
+VIdeo/
