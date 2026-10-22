@@ -17,3 +17,9 @@ Notes:
 - If a button points to a file that doesn't exist, music simply won't play (no error).
 - Music volume is controlled from the dashboard.
 - Mind copyright — use music you're allowed to use.
+
+Your own music (from the patient's device)
+---------------------------------------------
+Besides the tracks in this folder, the patient can add their own music files on their device
+("Media on this device" on the patient screen); the dashboard then lists them under
+"On the patient's device". See README.md.

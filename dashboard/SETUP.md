@@ -81,6 +81,13 @@ heartbeat. `pins` read is open so a patient can resolve a PIN to a room
 without signing in. Writing to `sessions` always stays restricted to the
 owning therapist.)
 
+The same open `status` write also carries `status/{roomId}/media`: the patient
+client publishes the list of files on its own device there (name, type, length
+and a tiny thumbnail — never the files), and only the owning therapist can read
+it. The dashboard treats it as untrusted input (`lib/device-media.ts`
+validates ids, names and thumbnails before showing anything). No rule change is
+needed for this.
+
 > **⚠️ If you applied the Milestone 2 version of these rules before
 > 2026-06-28:** the old `sessions.$roomId.read` rule required
 > `auth.uid === $roomId`, which silently blocks the Milestone 3 headset from

@@ -7,6 +7,7 @@
  */
 
 import type { Lang } from "@/lib/i18n";
+import type { BgProjection } from "@/lib/session-state";
 
 type Label = { en: string; he: string };
 
@@ -36,6 +37,45 @@ export const PHOTOS: PhotoEnv[] = [
 
 export const PHOTO_IDS = new Set(PHOTOS.map((p) => p.id));
 
+// ── Looping video backgrounds ───────────────────────────────────────────────
+// The video itself lives at the repo root (backgrounds/<id>.mp4) and is played
+// by the patient client; the dashboard only needs a poster image for the tile
+// and the live preview (dashboard/public/backgrounds/<id>.jpg).
+export interface VideoEnv {
+  id: string;
+  label: Label;
+  projection: BgProjection;
+}
+
+export const VIDEOS: VideoEnv[] = [
+  { id: "airplane-night", label: { en: "Airplane — Night Cabin", he: "מטוס — תא לילה" }, projection: "flat" },
+  { id: "airplane-evening", label: { en: "Airplane — Evening Cabin", he: "מטוס — תא ערב" }, projection: "flat" },
+];
+
+// Media backgrounds are written to `env` as 'video:<id>' (built in) or
+// 'local:<id>' (a file the patient added on their own device).
+export const VIDEO_ENV_PREFIX = "video:";
+export const LOCAL_ENV_PREFIX = "local:";
+export const videoEnv = (id: string) => `${VIDEO_ENV_PREFIX}${id}`;
+export const localEnv = (id: string) => `${LOCAL_ENV_PREFIX}${id}`;
+export const isVideoEnv = (env: string) => env.startsWith(VIDEO_ENV_PREFIX);
+export const isLocalEnv = (env: string) => env.startsWith(LOCAL_ENV_PREFIX);
+export const isMediaEnv = (env: string) => isVideoEnv(env) || isLocalEnv(env);
+
+/**
+ * Image to draw for a background in the live preview (null → a color wash).
+ * `localThumb` looks up the thumbnail of a file on the patient's device.
+ */
+export function envPreviewSrc(env: string, localThumb?: (id: string) => string | undefined): string | null {
+  if (PHOTO_IDS.has(env)) return `/backgrounds/${env}.jpg`;
+  if (isVideoEnv(env)) {
+    const id = env.slice(VIDEO_ENV_PREFIX.length);
+    return VIDEOS.some((v) => v.id === id) ? `/backgrounds/${id}.jpg` : null;
+  }
+  if (isLocalEnv(env)) return localThumb?.(env.slice(LOCAL_ENV_PREFIX.length)) ?? null;
+  return null;
+}
+
 // ── Code-generated gradient environments (no asset file) ────────────────────
 export const GRADIENT_IDS = ["room", "nature", "beach", "sky", "neutral"] as const;
 export type GradientId = (typeof GRADIENT_IDS)[number];
@@ -59,6 +99,7 @@ const GRADIENT_NAMES: Record<GradientId, Label> = {
 const ENV_LABELS: Record<string, Label> = {
   ...GRADIENT_NAMES,
   ...Object.fromEntries(PHOTOS.map((p) => [p.id, p.label])),
+  ...Object.fromEntries(VIDEOS.map((v) => [videoEnv(v.id), v.label])),
 };
 
 export function envName(id: string, lang: Lang): string {

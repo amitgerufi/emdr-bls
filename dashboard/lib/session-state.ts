@@ -7,7 +7,14 @@
  * change. The only architectural shift vs. the POC is the storage location:
  * the POC wrote the whole object to a single global `/emdr.json`; the SaaS
  * writes it to a room-scoped path `/sessions/{roomId}` (see lib/room.ts).
+ *
+ * Fields added later are additive: `bgProjection` and `bgVolume` (media
+ * backgrounds). A client that doesn't know them just keeps its own defaults.
  */
+
+/** How a video/image background is shown: a flat screen, or wrapped around the patient. */
+export type BgProjection = "flat" | "360";
+
 export interface SessionState {
   running: boolean;
   speed: number; // 1–9
@@ -21,8 +28,10 @@ export interface SessionState {
   audioVolume: number; // 0–9
   haptic: boolean;
   hapticStrength: number; // 1–9
-  env: string; // background id (gradient or photo)
-  music: string; // 'off' | track id
+  env: string; // background id: gradient, 360° photo, 'video:<id>' or 'local:<id>' (a file on the headset)
+  bgProjection: BgProjection; // for video:/local: backgrounds
+  bgVolume: number; // 0–9 — the background video's own sound
+  music: string; // 'off' | track id | 'local:<id>'
   musicVolume: number; // 0–9
   hapticOnly: boolean;
   iwText: string; // interweave text shown to patient ('' = none)
@@ -45,6 +54,8 @@ export const DEFAULT_SESSION_STATE: SessionState = {
   haptic: true,
   hapticStrength: 5,
   env: "sky",
+  bgProjection: "flat",
+  bgVolume: 5,
   music: "off",
   musicVolume: 5,
   hapticOnly: false,
@@ -62,4 +73,9 @@ export interface SessionStatus {
   alive: number; // Date.now() heartbeat
   reps: number; // completed movement cycles
   running: boolean;
+  /**
+   * The files the patient added on their own device (id → small record). Raw and
+   * untrusted — read it through `sanitizeDeviceMedia` (lib/device-media.ts).
+   */
+  media?: unknown;
 }

@@ -8,7 +8,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeStatus, writeSessionState } from "@/lib/room";
 import {
+  deviceMediaSignature,
+  sanitizeDeviceMedia,
+  type DeviceMediaItem,
+} from "@/lib/device-media";
+import {
   DEFAULT_SESSION_STATE,
+  type BgProjection,
   type SessionState,
   type SessionStatus,
 } from "@/lib/session-state";
@@ -26,6 +32,10 @@ export function useSessionPanel(roomId: string | null) {
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [connected, setConnected] = useState(false);
   const lastAliveRef = useRef(0);
+
+  // Files the patient added on their own device, as published by the patient client.
+  const [deviceMedia, setDeviceMedia] = useState<DeviceMediaItem[]>([]);
+  const mediaSignatureRef = useRef("");
 
   const [sets, setSets] = useState(0);
   const [setSecs, setSetSecs] = useState(0);
@@ -89,7 +99,16 @@ export function useSessionPanel(roomId: string | null) {
     (pattern: SessionState["pattern"]) => update({ pattern }, true),
     [update],
   );
-  const setEnv = useCallback((env: string) => update({ env }, true), [update]);
+  // Picking a video/local background also sets how it is shown (flat screen or 360°).
+  const setEnv = useCallback(
+    (env: string, projection?: BgProjection) =>
+      update(projection ? { env, bgProjection: projection } : { env }, true),
+    [update],
+  );
+  const setBgProjection = useCallback(
+    (bgProjection: BgProjection) => update({ bgProjection }, true),
+    [update],
+  );
   const setMusic = useCallback((music: string) => update({ music }, true), [update]);
   const setColor = useCallback((color: string) => update({ color }, true), [update]);
 
@@ -173,6 +192,8 @@ export function useSessionPanel(roomId: string | null) {
       haptic: s.haptic,
       hapticStrength: s.hapticStrength,
       env: s.env,
+      bgProjection: s.bgProjection,
+      bgVolume: s.bgVolume,
       music: s.music,
       musicVolume: s.musicVolume,
       hapticOnly: s.hapticOnly,
@@ -186,6 +207,12 @@ export function useSessionPanel(roomId: string | null) {
     const unsubscribe = subscribeStatus(roomId, (s) => {
       setStatus(s);
       if (s) lastAliveRef.current = Date.now();
+      // The status node updates every second (heartbeat); only re-read the media list when it changed.
+      const signature = deviceMediaSignature(s?.media);
+      if (signature !== mediaSignatureRef.current) {
+        mediaSignatureRef.current = signature;
+        setDeviceMedia(sanitizeDeviceMedia(s?.media));
+      }
     });
     const connInterval = setInterval(() => {
       setConnected(Date.now() - lastAliveRef.current < CONNECTION_TIMEOUT_MS);
@@ -211,6 +238,7 @@ export function useSessionPanel(roomId: string | null) {
     state,
     reps: status?.reps ?? 0,
     connected,
+    deviceMedia,
     sets,
     setSecs,
     totalSecs,
@@ -222,6 +250,7 @@ export function useSessionPanel(roomId: string | null) {
     toggle,
     setPattern,
     setEnv,
+    setBgProjection,
     setMusic,
     setColor,
     togglePlay,

@@ -123,6 +123,16 @@ export const dict = {
   backgroundMusic: { en: "Background music", he: "מוזיקת רקע" },
   none: { en: "None", he: "ללא" },
   musicLoopHint: { en: "Music plays in the background on a loop.", he: "המוזיקה מתנגנת ברקע בלולאה." },
+  backgroundVideo: { en: "Video", he: "וידאו" },
+  bgSound: { en: "Sound", he: "סאונד" },
+  onThisDevice: { en: "On the patient's device", he: "במכשיר של המטופל/ת" },
+  deviceMediaHint: {
+    en: "Add your own videos, images and music on the patient's device: on the patient screen, tap “Media on this device”.",
+    he: "אפשר להוסיף סרטונים, תמונות ומוזיקה אישיים במכשיר של המטופל/ת. במסך המטופל/ת לוחצים על “Media on this device”.",
+  },
+  showAs: { en: "Show as", he: "הצגה" },
+  projectionScreen: { en: "Screen", he: "מסך" },
+  projection360: { en: "360°", he: "360°" },
 
   // Presets section
   presetNamePlaceholder: { en: "Name for current settings…", he: "שם להגדרות הנוכחיות…" },

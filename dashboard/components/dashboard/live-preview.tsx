@@ -2,22 +2,24 @@
 
 import { useEffect, useRef } from "react";
 import { useLanguage } from "@/lib/language-context";
-import { ENV_COLORS, type GradientId, PHOTO_IDS } from "@/lib/constants";
+import { ENV_COLORS, type GradientId, envPreviewSrc } from "@/lib/constants";
+import type { DeviceMediaItem } from "@/lib/device-media";
 import type { SessionState } from "@/lib/session-state";
 
 /**
  * Mini real-time render of what the patient sees in the headset — ported
  * from the POC's `drawPreview()` (dashboard.html) so the therapist can
  * monitor the stimulation visually without putting the headset on.
+ * Photo and video backgrounds are drawn as a still image (a video's poster).
  */
 
-const photoCache = new Map<string, HTMLImageElement>();
-function getPhotoImg(id: string): HTMLImageElement {
-  let img = photoCache.get(id);
+const imageCache = new Map<string, HTMLImageElement>();
+function getImage(src: string): HTMLImageElement {
+  let img = imageCache.get(src);
   if (!img) {
     img = new Image();
-    img.src = `/backgrounds/${id}.jpg`;
-    photoCache.set(id, img);
+    img.src = src;
+    imageCache.set(src, img);
   }
   return img;
 }
@@ -25,17 +27,24 @@ function getPhotoImg(id: string): HTMLImageElement {
 interface LivePreviewProps {
   state: SessionState;
   iwText: string;
+  /** Files on the patient's device — their thumbnails stand in for local backgrounds. */
+  deviceMedia: DeviceMediaItem[];
 }
 
-export function LivePreview({ state, iwText }: LivePreviewProps) {
+export function LivePreview({ state, iwText, deviceMedia }: LivePreviewProps) {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef(state);
   const iwTextRef = useRef(iwText);
+  const deviceMediaRef = useRef(deviceMedia);
 
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    deviceMediaRef.current = deviceMedia;
+  }, [deviceMedia]);
 
   useEffect(() => {
     iwTextRef.current = iwText;
@@ -79,8 +88,9 @@ export function LivePreview({ state, iwText }: LivePreviewProps) {
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      if (PHOTO_IDS.has(s.env)) {
-        const img = getPhotoImg(s.env);
+      const imageSrc = envPreviewSrc(s.env, (id) => deviceMediaRef.current.find((m) => m.id === id)?.thumb);
+      if (imageSrc) {
+        const img = getImage(imageSrc);
         if (img.complete && img.naturalWidth) {
           const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
           const dw = img.naturalWidth * scale;
