@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useLanguage } from "@/lib/language-context";
-import { ENV_COLORS, type GradientId, envPreviewSrc } from "@/lib/constants";
+import { ENV_COLORS, type GradientId, envPreviewSrc, envPreviewVideoSrc } from "@/lib/constants";
 import type { DeviceMediaItem } from "@/lib/device-media";
 import type { SessionState } from "@/lib/session-state";
 
@@ -10,7 +10,10 @@ import type { SessionState } from "@/lib/session-state";
  * Mini real-time render of what the patient sees in the headset — ported
  * from the POC's `drawPreview()` (dashboard.html) so the therapist can
  * monitor the stimulation visually without putting the headset on.
- * Photo and video backgrounds are drawn as a still image (a video's poster).
+ * Photo backgrounds are drawn as a still image; a built-in video plays (muted,
+ * on a loop) in a <video> behind the canvas, which is transparent then; a file
+ * from the patient's own device is shown as its thumbnail. The preview video is
+ * its own copy of the loop, so it isn't frame-synced with the headset.
  */
 
 const imageCache = new Map<string, HTMLImageElement>();
@@ -88,8 +91,14 @@ export function LivePreview({ state, iwText, deviceMedia }: LivePreviewProps) {
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      const imageSrc = envPreviewSrc(s.env, (id) => deviceMediaRef.current.find((m) => m.id === id)?.thumb);
-      if (imageSrc) {
+      // A built-in video plays in the <video> behind this (transparent) canvas.
+      const liveVideo = envPreviewVideoSrc(s.env) !== null;
+      const imageSrc = liveVideo
+        ? null
+        : envPreviewSrc(s.env, (id) => deviceMediaRef.current.find((m) => m.id === id)?.thumb);
+      if (liveVideo) {
+        // nothing to paint here — the video shows through
+      } else if (imageSrc) {
         const img = getImage(imageSrc);
         if (img.complete && img.naturalWidth) {
           const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
@@ -193,9 +202,28 @@ export function LivePreview({ state, iwText, deviceMedia }: LivePreviewProps) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  const videoSrc = envPreviewVideoSrc(state.env);
+  const posterSrc = envPreviewSrc(state.env);
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-[#060e16] shadow-elevated glow-signal">
-      <canvas ref={canvasRef} className="block h-[128px] w-full lg:h-[168px]" />
+      {videoSrc && (
+        // Muted + inline, so phones let it autoplay; until the first frame (or if the file can't load) the poster shows.
+        <video
+          key={videoSrc}
+          src={videoSrc}
+          poster={posterSrc ?? undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+          tabIndex={-1}
+          className="absolute inset-0 size-full object-cover"
+        />
+      )}
+      <canvas ref={canvasRef} className="relative block h-[128px] w-full lg:h-[168px]" />
 
       {/* Telemetry overlay — instrument readouts in mono (Latin/numerals only). */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-3 py-2">

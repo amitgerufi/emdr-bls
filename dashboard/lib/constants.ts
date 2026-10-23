@@ -76,6 +76,18 @@ export function envPreviewSrc(env: string, localThumb?: (id: string) => string |
   return null;
 }
 
+/**
+ * A looping video to play behind the ball in the live preview. Only for the
+ * built-in videos, whose file is also kept in dashboard/public/backgrounds/ —
+ * a file on the patient's own device never reaches the dashboard (it only gets
+ * a thumbnail).
+ */
+export function envPreviewVideoSrc(env: string): string | null {
+  if (!isVideoEnv(env)) return null;
+  const id = env.slice(VIDEO_ENV_PREFIX.length);
+  return VIDEOS.some((v) => v.id === id) ? `/backgrounds/${id}.mp4` : null;
+}
+
 // ── Code-generated gradient environments (no asset file) ────────────────────
 export const GRADIENT_IDS = ["room", "nature", "beach", "sky", "neutral"] as const;
 export type GradientId = (typeof GRADIENT_IDS)[number];
