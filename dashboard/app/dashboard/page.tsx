@@ -60,6 +60,14 @@ export default function DashboardPage() {
 
   const panel = useSessionPanel(roomId);
 
+  // The patient started or paused the movement with their controller. The preview, timers and
+  // Start/Pause button have already followed — this just tells the therapist it happened.
+  useEffect(() => {
+    if (!panel.patientRun) return;
+    toast.info(panel.patientRun.on ? t("patientStarted") : t("patientStopped"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new press should notify, not a language toggle
+  }, [panel.patientRun]);
+
   if (loading || !user) return <FullScreenLoader />;
 
   const handleSignOut = async () => {
@@ -89,7 +97,7 @@ export default function DashboardPage() {
       </header>
 
       <main className="mx-auto grid w-full max-w-3xl flex-1 grid-cols-1 gap-3.5 px-4 py-5 lg:max-w-6xl lg:grid-cols-[380px_1fr] lg:items-start lg:gap-5 lg:px-6">
-        {!roomId ? (
+        {!roomId || !panel.ready ? (
           <RoomSkeleton label={t("settingUpRoom")} />
         ) : (
           <>
@@ -196,7 +204,7 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {roomId && (
+      {roomId && panel.ready && (
         <ActionBar
           running={panel.state.running}
           endSetDisabled={panel.endSetDisabled}

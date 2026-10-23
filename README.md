@@ -27,10 +27,10 @@ All three channels stay synchronized to the same movement cycle:
 
 ## 🎛️ The Dashboard (therapist interface)
 
-- **Session control** — start / pause / reset, elapsed-time timer, and rep counter
+- **Session control** — start / pause / reset, elapsed-time timer, and rep counter. It **follows the patient**: when they start or pause the movement with a controller trigger, the dashboard's timers, preview and Start / Pause button follow and a notice appears. Reloading the dashboard no longer resets a running session
 - **Live headset connection** — indicator showing whether the headset is connected
 - **Motion** — speed, width, height, and pattern: ⟷ horizontal or ∞ figure-8
-- **Ball** — size, color, and a live preview of exactly what the patient sees
+- **Ball** — size, color, and a live preview of what the patient sees (the built-in videos play live in it; a file from the patient's own device shows as its thumbnail)
 - **Background environments** — color washes (room / nature / beach / sky / neutral), **360° photo backgrounds** that wrap around the patient, and **looping video backgrounds** with their own sound (see [Video backgrounds](#-video--image-backgrounds))
 - **Channels** — independent on/off per channel, plus a "haptics only (no headset)" mode
 - **Background music** — track selection (8 meditation tracks) with volume control, or music from the patient's own device
@@ -105,8 +105,9 @@ Built-in videos live in [`backgrounds/`](backgrounds/) (for example the two airp
 1. Make a short, seamless loop — a few seconds is enough, the player repeats it endlessly and its sound loops
    without a click. (With Claude and the video-studio skill: *"make this clip a seamless loop, normalise the
    sound to -20 LUFS, H.264 + AAC, 1280×720"*.) Plain H.264 video + AAC audio plays everywhere.
-2. Put it in `backgrounds/<id>.mp4` and a poster picture (JPG, about 640 px wide) in
-   `dashboard/public/backgrounds/<id>.jpg`.
+2. Put it in `backgrounds/<id>.mp4` (the headset plays this one), and put a copy of it plus a poster picture
+   (JPG, about 640 px wide) in `dashboard/public/backgrounds/` as `<id>.mp4` and `<id>.jpg` (the dashboard's
+   live preview plays the copy and shows the poster until it starts).
 3. Add a line to `VIDEOS` in [`dashboard/lib/constants.ts`](dashboard/lib/constants.ts) — the id, an English and a
    Hebrew label, and `flat` (a screen) or `360`.
 

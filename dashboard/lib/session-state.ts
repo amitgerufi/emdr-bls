@@ -78,4 +78,10 @@ export interface SessionStatus {
    * untrusted — read it through `sanitizeDeviceMedia` (lib/device-media.ts).
    */
   media?: unknown;
+  /**
+   * The patient's last start / pause press on a controller trigger
+   * (`{ at, on }`). Raw and untrusted — read it through `parsePatientRun`
+   * (lib/patient-run.ts).
+   */
+  run?: unknown;
 }

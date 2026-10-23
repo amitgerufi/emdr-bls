@@ -99,6 +99,7 @@ Recommended: implement the slider as "size" (actual size) for the first version.
 - Session time timer
 - Status indicator (ready / active / paused)
 - Reset button
+- **The dashboard follows the patient:** when the patient starts or pauses the movement with a controller trigger (which also works without the dashboard), the headset announces it (`status/{roomId}/run`) and the dashboard reacts like a press on its own Start / Pause button — a pause is a pause, the therapist still ends a set with "End set". Opening or reloading the dashboard resumes the live session instead of resetting it.
 - **"Haptics only (no headset)" toggle** — enables a mode where the patient can remove the headset and experience only the vibration in their hands (see section 5 for implementation details)
 
 ### Interweaves — floating text for the patient (implemented)
