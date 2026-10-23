@@ -758,6 +758,18 @@
       }).catch(() => {});
     }
 
+    // The patient started or paused the movement with a controller: tell the dashboard right away (not on the
+    // next heartbeat) so the therapist's timers, preview and buttons follow. `run` is only ever written by a press,
+    // so the dashboard can tell a real press from the once-a-second heartbeat.
+    function announceRun() {
+      if (!roomId) return;
+      fetch(`${DB}/status/${roomId}.json`, {
+        method: 'PATCH',
+        body: JSON.stringify({ run: { at: Date.now(), on: S.running }, alive: Date.now(), reps, running: S.running }),
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => {});
+    }
+
     // shares the list of files on this device (names + thumbnails, never the files) with the dashboard
     async function publishMedia() {
       if (!roomId) return;
@@ -840,10 +852,11 @@
     else pinInput.focus();
 
     // ══════════════════════════════════════════
-    //  Controllers (backup without the dashboard)
+    //  Controllers — the patient can start / pause the movement with a trigger (it works without the
+    //  dashboard too). When the dashboard is open it follows, because the press is announced right away.
     // ══════════════════════════════════════════
     [renderer.xr.getController(0), renderer.xr.getController(1)].forEach(ctrl => {
-      ctrl.addEventListener('selectstart', () => { S.running = !S.running; });
+      ctrl.addEventListener('selectstart', () => { S.running = !S.running; announceRun(); });
       scene.add(ctrl);
     });
 

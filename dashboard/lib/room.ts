@@ -51,6 +51,36 @@ export function subscribeStatus(
   });
 }
 
+/** One-shot read of the live session — used to resume it when the dashboard (re)opens. */
+export async function readSessionState(roomId: string): Promise<unknown> {
+  const snapshot = await get(ref(getFirebaseDb(), sessionPath(roomId)));
+  return snapshot.val();
+}
+
+/** One-shot read of the patient client's status (heartbeat, reps, running…). */
+export async function readStatus(roomId: string): Promise<SessionStatus | null> {
+  const snapshot = await get(ref(getFirebaseDb(), statusPath(roomId)));
+  return snapshot.val() as SessionStatus | null;
+}
+
+/**
+ * Everything the session hook needs from the database, as one swappable object,
+ * so the hook can be exercised without Firebase.
+ */
+export interface SessionIo {
+  readSession(roomId: string): Promise<unknown>;
+  readStatus(roomId: string): Promise<SessionStatus | null>;
+  writeSession(roomId: string, state: SessionState): Promise<void>;
+  subscribeStatus(roomId: string, callback: (status: SessionStatus | null) => void): () => void;
+}
+
+export const firebaseSessionIo: SessionIo = {
+  readSession: readSessionState,
+  readStatus,
+  writeSession: writeSessionState,
+  subscribeStatus,
+};
+
 /**
  * Resolve the therapist's permanent room, creating it on first login.
  *

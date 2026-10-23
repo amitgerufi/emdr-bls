@@ -130,6 +130,8 @@ export const dict = {
     en: "Add your own videos, images and music on the patient's device: on the patient screen, tap “Media on this device”.",
     he: "אפשר להוסיף סרטונים, תמונות ומוזיקה אישיים במכשיר של המטופל/ת. במסך המטופל/ת לוחצים על “Media on this device”.",
   },
+  patientStarted: { en: "The patient started the movement", he: "המטופל/ת הפעיל/ה את התנועה" },
+  patientStopped: { en: "The patient paused the movement", he: "המטופל/ת עצר/ה את התנועה" },
   showAs: { en: "Show as", he: "הצגה" },
   projectionScreen: { en: "Screen", he: "מסך" },
   projection360: { en: "360°", he: "360°" },
