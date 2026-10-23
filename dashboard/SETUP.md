@@ -88,6 +88,13 @@ it. The dashboard treats it as untrusted input (`lib/device-media.ts`
 validates ids, names and thumbnails before showing anything). No rule change is
 needed for this.
 
+`status/{roomId}/run` works the same way: when the patient starts or pauses the
+movement with a controller trigger, the headset writes `{ at, on }` there and
+the dashboard follows (`lib/patient-run.ts`). Because `status` is writable
+without signing in, anyone who knows a room's PIN could send such a press while
+the dashboard is open — closing that gap belongs with the Milestone 4 rule
+hardening.
+
 > **⚠️ If you applied the Milestone 2 version of these rules before
 > 2026-06-28:** the old `sessions.$roomId.read` rule required
 > `auth.uid === $roomId`, which silently blocks the Milestone 3 headset from
